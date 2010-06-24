@@ -73,6 +73,7 @@ AudioPolicyService::AudioPolicyService()
     // start audio commands thread
     mAudioCommandThread = new AudioCommandThread(String8("ApmCommandThread"));
 
+#if 0
 #if (defined GENERIC_AUDIO) || (defined AUDIO_POLICY_TEST)
     mpPolicyManager = new AudioPolicyManagerBase(this);
     LOGV("build for GENERIC_AUDIO - using generic audio policy");
@@ -86,6 +87,10 @@ AudioPolicyService::AudioPolicyService()
         LOGV("Using hardware specific audio policy");
         mpPolicyManager = createAudioPolicyManager(this);
     }
+#endif
+#else
+    LOGV("Using hardware specific audio policy");
+    mpPolicyManager = createAudioPolicyManager(this);
 #endif
 
     // load properties
