@@ -318,15 +318,7 @@ public class Environment {
      * <p>See {@link #getExternalStorageDirectory()} for an example of its use.
      */
     public static String getExternalStorageState() {
-        try {
-            if (mMntSvc == null) {
-                mMntSvc = IMountService.Stub.asInterface(ServiceManager
-                                                         .getService("mount"));
-            }
-            return mMntSvc.getVolumeState(getExternalStorageDirectory().toString());
-        } catch (Exception rex) {
-            return Environment.MEDIA_REMOVED;
-        }
+        return SystemProperties.get("EXTERNAL_STORAGE_STATE", MEDIA_REMOVED);
     }
 
     static File getDirectory(String variableName, String defaultPath) {
