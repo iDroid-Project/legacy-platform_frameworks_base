@@ -54,6 +54,7 @@
                         android:layout_height="0dip"
                         android:layout_weight="1"
                         android:scaleType="center"
+						android:src="@drawable/stat_idroidbtn_send"
                         />
             </LinearLayout>
             <LinearLayout android:id="@+id/exp_idroid_btn_2"
