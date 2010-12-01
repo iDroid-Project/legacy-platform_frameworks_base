@@ -46,7 +46,6 @@
                     android:orientation="vertical"
                     android:clickable="true"
                     android:focusable="true"
-                    android:visibility="gone"
                     android:background="@drawable/stat_idroidbtn_bg"
             >
                 <ImageView android:id="@+id/exp_idroid_image_1"
@@ -64,7 +63,6 @@
                 android:orientation="vertical"
                 android:clickable="true"
                 android:focusable="true"
-                android:visibility="gone"
                 android:background="@drawable/stat_idroidbtn_bg"
             >
                 <ImageView android:id="@+id/exp_idroid_image_2"
@@ -81,7 +79,6 @@
                 android:orientation="vertical"
                 android:clickable="true"
                 android:focusable="true"
-                android:visibility="gone"
                 android:background="@drawable/stat_idroidbtn_bg"
             >
                 <ImageView android:id="@+id/exp_idroid_image_3"
@@ -98,7 +95,6 @@
                 android:orientation="vertical"
                 android:clickable="true"
                 android:focusable="true"
-                android:visibility="gone"
                     android:background="@drawable/stat_idroidbtn_bg"
            >
                 <ImageView android:id="@+id/exp_idroid_image_4"
@@ -115,7 +111,6 @@
                 android:orientation="vertical"
                 android:clickable="true"
                 android:focusable="true"
-                android:visibility="gone"
                 android:background="@drawable/stat_idroidbtn_bg"
             >
                 <ImageView android:id="@+id/exp_idroid_image_5"
@@ -132,7 +127,6 @@
                 android:orientation="vertical"
                 android:clickable="true"
                 android:focusable="true"
-                android:visibility="gone"
                 android:background="@drawable/stat_idroidbtn_bg"
             >
                 <ImageView android:id="@+id/exp_idroid_image_6"
