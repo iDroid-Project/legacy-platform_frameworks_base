@@ -39,6 +39,7 @@ import android.os.RemoteException;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.Message;
+import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.provider.Telephony;
 import android.util.Slog;
@@ -55,6 +56,8 @@ import android.view.WindowManager;
 import android.view.WindowManagerImpl;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.view.IWindowManager;
+import android.view.KeyEvent;
 import android.widget.LinearLayout;
 import android.widget.RemoteViews;
 import android.widget.ScrollView;
@@ -225,7 +228,7 @@ public class StatusBarService extends IStatusBar.Stub
     boolean mAnimatingReveal = false;
     int mViewDelta;
     int[] mAbsPos = new int[2];
-    
+	
     // for disabling the status bar
     ArrayList<DisableRecord> mDisableRecords = new ArrayList<DisableRecord>();
     int mDisabled = 0;
@@ -253,8 +256,12 @@ public class StatusBarService extends IStatusBar.Stub
 	
 	private View.OnClickListener sendButtonListener = new View.OnClickListener() {
 		public void onClick(View v) {
-			Context context = getApplicationContext();
-			Toast.makeText(context,"All your send buttons are belong to us",Toast.LENGTH_LONG).show();
+			try {
+			 	IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_CALL), true);
+				IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_CALL), true);
+			} catch (RemoteException e) {
+				Log.e(TAG, "sendKey exception " + e);
+			}
 			return;
 		}
 	};
