@@ -142,6 +142,7 @@
                         android:scaleType="center"
                         />
         </LinearLayout>
+		</LinearLayout>
         <!-- End Soft Buttons Widget -->
 
         <LinearLayout
