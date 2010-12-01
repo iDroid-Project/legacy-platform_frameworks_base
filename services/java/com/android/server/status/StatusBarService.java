@@ -361,9 +361,8 @@ public class StatusBarService extends IStatusBar.Stub
         lp.gravity = Gravity.TOP | Gravity.FILL_HORIZONTAL;
         lp.setTitle("StatusBar");
         lp.windowAnimations = R.style.Animation_StatusBar;
-
+		this.setupSoftButtons();
         WindowManagerImpl.getDefault().addView(view, lp);
-    	this.setupSoftButtons();
     }
     
     // ================================================================================
