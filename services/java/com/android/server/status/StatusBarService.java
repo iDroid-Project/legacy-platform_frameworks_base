@@ -43,6 +43,7 @@ import android.os.ServiceManager;
 import android.os.SystemClock;
 import android.provider.Telephony;
 import android.util.Slog;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -248,24 +249,24 @@ public class StatusBarService extends IStatusBar.Stub
         mNotificationCallbacks = listener;
     }
 	/* SOFT BUTTON TEST - CLEAN THIS SHIT UP AFTERWARDS KTHX */
-	private void setupSoftButtons()
-	{
-		LinearLayout sendButton = (LinearLayout) findViewById(R.id.exp_idroid_btn_1);
-		sendButton.setOnClickListener(sendButtonListener);
-	}
-	
-	private View.OnClickListener sendButtonListener = new View.OnClickListener() {
-		public void onClick(View v) {
-			try {
-			 	IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_CALL), true);
-				IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_CALL), true);
-			} catch (RemoteException e) {
-				Log.e(TAG, "sendKey exception " + e);
-			}
-			return;
-		}
-	};
-	/* END SOFT BUTTON TEST SCHIZZLE */
+        private void setupSoftButtons()
+        {
+                LinearLayout sendButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_1);
+                sendButton.setOnClickListener(sendButtonListener);
+        }
+
+        private View.OnClickListener sendButtonListener = new View.OnClickListener() {
+                public void onClick(View v) {
+                        try {
+                                IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_CALL), true);
+                                IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_CALL), true);
+                        } catch (RemoteException e) {
+                                Log.e(TAG, "sendKey exception " + e);
+                        }
+                        return;
+                }
+        };
+        /* END SOFT BUTTON TEST SCHIZZLE */
 	
     // ================================================================================
     // Constructing the view
