@@ -252,11 +252,11 @@ public class StatusBarService extends IStatusBar.Stub
 	}
 	
 	private View.OnClickListener sendButtonListener = new View.OnClickListener() {
-	        public void onClick(View v) {
-				Context context = getApplicationContext();
-	            Toast.makeText(context,"All your send buttons are belong to us",Toast.LENGTH_LONG).show();
-				return;
-	        }
+		public void onClick(View v) {
+			Context context = getApplicationContext();
+			Toast.makeText(context,"All your send buttons are belong to us",Toast.LENGTH_LONG).show();
+			return;
+		}
 	};
 	/* END SOFT BUTTON TEST SCHIZZLE */
 	
