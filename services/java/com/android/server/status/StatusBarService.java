@@ -60,6 +60,7 @@ import android.widget.RemoteViews;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.FrameLayout;
+import android.widget.Toast;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -243,7 +244,22 @@ public class StatusBarService extends IStatusBar.Stub
     public void setNotificationCallbacks(NotificationCallbacks listener) {
         mNotificationCallbacks = listener;
     }
-
+	/* SOFT BUTTON TEST - CLEAN THIS SHIT UP AFTERWARDS KTHX */
+	private void setupSoftButtons()
+	{
+		Layout sendButton = (LinearLayout) findViewById(R.id.exp_idroid_btn_1);
+		sendButton.setOnClickListener(sendButtonListener);
+	}
+	
+	private View.OnClickListener sendButtonListener = new View.OnClickListener() {
+	        public void onClick(View v) {
+				Context context = getApplicationContext();
+	            Toast.makeText(context,"All your send buttons are belong to us",Toast.LENGTH_LONG).show();
+				return;
+	        }
+	};
+	/* END SOFT BUTTON TEST SCHIZZLE */
+	
     // ================================================================================
     // Constructing the view
     // ================================================================================
@@ -347,6 +363,7 @@ public class StatusBarService extends IStatusBar.Stub
         lp.windowAnimations = R.style.Animation_StatusBar;
 
         WindowManagerImpl.getDefault().addView(view, lp);
+    	this.setupSoftButtons();
     }
     
     // ================================================================================
