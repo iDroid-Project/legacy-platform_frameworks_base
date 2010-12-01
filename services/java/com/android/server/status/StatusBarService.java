@@ -247,7 +247,7 @@ public class StatusBarService extends IStatusBar.Stub
 	/* SOFT BUTTON TEST - CLEAN THIS SHIT UP AFTERWARDS KTHX */
 	private void setupSoftButtons()
 	{
-		Layout sendButton = (LinearLayout) findViewById(R.id.exp_idroid_btn_1);
+		LinearLayout sendButton = (LinearLayout) findViewById(R.id.exp_idroid_btn_1);
 		sendButton.setOnClickListener(sendButtonListener);
 	}
 	
