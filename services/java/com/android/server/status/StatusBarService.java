@@ -286,7 +286,7 @@ public class StatusBarService extends IStatusBar.Stub
 		}
 
 		try {
-			mHandler.performCollapse();
+			performCollapse();
 			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, buttonEvent), true);
 			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, buttonEvent), true);
 		} catch (RemoteException e) {
