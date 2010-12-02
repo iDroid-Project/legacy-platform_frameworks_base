@@ -64,7 +64,6 @@ import android.widget.RemoteViews;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.FrameLayout;
-import android.widget.Toast;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
@@ -229,10 +228,7 @@ public class StatusBarService extends IStatusBar.Stub
     boolean mAnimatingReveal = false;
     int mViewDelta;
     int[] mAbsPos = new int[2];
-	
-	// SOFT BUTTON
-	private int mKey = KeyEvent.KEYCODE_BACK;
-	
+		
     // for disabling the status bar
     ArrayList<DisableRecord> mDisableRecords = new ArrayList<DisableRecord>();
     int mDisabled = 0;
@@ -258,60 +254,23 @@ public class StatusBarService extends IStatusBar.Stub
 		LinearLayout homeButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_2);
 		LinearLayout backButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_3);
 		LinearLayout endButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_4);
+		
+		/* We haz 2 spares here and no use for them right now, maybe later
+		LinearLayout anotherButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_5);
+		LinearLayout yetAnotherButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_6);
+		anotherButton.setOnClickListener(idroidButtonListener);
+		yetAnotherButton.setOnClickListener(idroidButtonListener);
+		*/
 		sendButton.setOnClickListener(idroidButtonListener);
 		homeButton.setOnClickListener(idroidButtonListener);
 		backButton.setOnClickListener(idroidButtonListener);
 		endButton.setOnClickListener(idroidButtonListener);
     }
-	
-	private void runKey(int key) {
-		mKey = key;
-		mHandler.post(new Runnable() {
-			public void run() {
-				press(mKey);
-			}
-		});
-	}
-	
-	public void press(int key) {
-		sendKey(new KeyEvent(KeyEvent.ACTION_DOWN, key));
-		sendKey(new KeyEvent(KeyEvent.ACTION_UP, key));
-	}
-	
-	public void sendKey(KeyEvent event) {
-		try {
-				IWindowManager.Stub.asInterface(ServiceManager.getService("window"))
-														.injectKeyEvent(event, true);
-		} catch (RemoteException e) {
-			Log.e(TAG, "sendKey exception " + e);
-		}
-	}
-	
+		
     private View.OnClickListener idroidButtonListener = new View.OnClickListener() {
 		public void onClick(View v) {
-			int buttonEvent;
-			int viewId = v.getId();
-
-			switch(viewId) {
-				case R.id.exp_idroid_btn_1:
-				buttonEvent = KeyEvent.KEYCODE_CALL;
-				break;
-				case R.id.exp_idroid_btn_2:
-				buttonEvent = KeyEvent.KEYCODE_HOME;
-				break;
-				case R.id.exp_idroid_btn_3:
-				buttonEvent = KeyEvent.KEYCODE_BACK;
-				break;
-				case R.id.exp_idroid_btn_4:
-				buttonEvent = KeyEvent.KEYCODE_ENDCALL;
-				break;
-				default:
-				/* Stop shit from crashing, just send back */
-				buttonEvent = KeyEvent.KEYCODE_BACK;
-				break;			
-			}
 			deactivate();
-			runKey(buttonEvent);
+			(new Thread(new SoftButtons(v))).start();
 			return;
 		}
     };
