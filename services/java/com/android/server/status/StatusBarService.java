@@ -310,6 +310,7 @@ public class StatusBarService extends IStatusBar.Stub
 				buttonEvent = KeyEvent.KEYCODE_BACK;
 				break;			
 			}
+			deactivate();
 			runKey(buttonEvent);
 			return;
 		}

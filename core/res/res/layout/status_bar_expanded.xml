@@ -70,6 +70,7 @@
                         android:layout_height="0dip"
                         android:layout_weight="1"
                         android:scaleType="center"
+						android:src="@drawable/stat_idroidbtn_home"
                         />
             </LinearLayout>
             <LinearLayout android:id="@+id/exp_idroid_btn_3"
@@ -86,6 +87,7 @@
                         android:layout_height="0dip"
                         android:layout_weight="1"
                         android:scaleType="center"
+						android:src="@drawable/stat_idroidbtn_back"
                         />
             </LinearLayout>
             <LinearLayout android:id="@+id/exp_idroid_btn_4"
@@ -102,6 +104,7 @@
                         android:layout_height="0dip"
                         android:layout_weight="1"
                         android:scaleType="center"
+						android:src="@drawable/stat_idroidbtn_end"
                         />
             </LinearLayout>
             <LinearLayout android:id="@+id/exp_idroid_btn_5"
