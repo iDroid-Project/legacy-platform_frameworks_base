@@ -248,53 +248,55 @@ public class StatusBarService extends IStatusBar.Stub
     public void setNotificationCallbacks(NotificationCallbacks listener) {
         mNotificationCallbacks = listener;
     }
-	/* SOFT BUTTONS */
-        private void setupSoftButtons()
-        {
-                LinearLayout sendButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_1);
-                LinearLayout homeButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_2);
-		LinearLayout backButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_3);
-		LinearLayout endButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_4);
-		sendButton.setOnClickListener(idroidButtonListener);
-		homeButton.setOnClickListener(idroidButtonListener);
-		backButton.setOnClickListener(idroidButtonListener);
-		endButton.setOnClickListener(idroidButtonListener);
-        }
+    /* SOFT BUTTONS */
+    private void setupSoftButtons()
+    {
+	LinearLayout sendButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_1);
+	LinearLayout homeButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_2);
+	LinearLayout backButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_3);
+	LinearLayout endButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_4);
+	sendButton.setOnClickListener(idroidButtonListener);
+	homeButton.setOnClickListener(idroidButtonListener);
+	backButton.setOnClickListener(idroidButtonListener);
+	endButton.setOnClickListener(idroidButtonListener);
+    }
 
-        private View.OnClickListener idroidButtonListener = new View.OnClickListener() {
-                public void onClick(View v) {
-                        KeyEvent buttonEvent;
-			int viewId = v.getId();
-			
-			switch(viewId) {
-				case R.id.exp_idroid_btn_1:
-					buttonEvent = KeyEvent.KEYCODE_CALL;
-					break;
-				case R.id.exp_idroid_btn_2:
-					buttonEvent = KeyEvent.KEYCODE_HOME;
-                                        break;
-				case R.id.exp_idroid_btn_3:
-                                        buttonEvent = KeyEvent.KEYCODE_BACK;
-                                        break;
-				case R.id.exp_idroid_btn_4:
-                                        buttonEvent = KeyEvent.KEYCODE_ENDCALL;
-                                        break;
-				default:
-					/* Stop shit from crashing, just send back */
-					buttonEvent = KeyEvent.KEYCODE_BACK;
-                                        break;			
-			}
+    private View.OnClickListener idroidButtonListener = new View.OnClickListener() {
+	public void onClick(View v) {
+		int buttonEvent;
+		int viewId = v.getId();
+		
+		switch(viewId) {
+			case R.id.exp_idroid_btn_1:
+				buttonEvent = KeyEvent.KEYCODE_CALL;
+				break;
+			case R.id.exp_idroid_btn_2:
+				buttonEvent = KeyEvent.KEYCODE_HOME;
+				break;
+			case R.id.exp_idroid_btn_3:
+				buttonEvent = KeyEvent.KEYCODE_BACK;
+				break;
+			case R.id.exp_idroid_btn_4:
+				buttonEvent = KeyEvent.KEYCODE_ENDCALL;
+				break;
+			default:
+				/* Stop shit from crashing, just send back */
+				buttonEvent = KeyEvent.KEYCODE_BACK;
+				break;			
+		}
 
-			try {
-                                IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, buttonEvent), true);
-                                IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, buttonEvent), true);
-                        } catch (RemoteException e) {
-                                Log.e(TAG, "sendKey exception " + e);
-                        }
-                        return;
-                }
-        };
-        /* END SOFT BUTTONS */
+		try {
+			mHandler.performCollapse();
+			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, buttonEvent), true);
+			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, buttonEvent), true);
+		} catch (RemoteException e) {
+			Log.e(TAG, "All your button are belong to: " + e);
+		}
+		
+		return;
+	}
+    };
+    /* END SOFT BUTTONS */
 	
     // ================================================================================
     // Constructing the view
