@@ -19,13 +19,16 @@ package com.android.server.status;
 import com.android.internal.R;
 import com.android.internal.util.CharSequences;
 
+import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.view.IWindowManager;
 import android.view.KeyEvent;
+import android.view.View;
 import android.util.Log;
 
 public class SoftButtons implements Runnable
 {
+	static final String TAG = "SoftButtons";
 	private View v;
 	private int buttonEvent;
 	
