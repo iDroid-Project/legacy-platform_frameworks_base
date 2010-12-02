@@ -286,9 +286,13 @@ public class StatusBarService extends IStatusBar.Stub
 		}
 
 		try {
-			performCollapse();
-			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, buttonEvent), true);
-			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, buttonEvent), true);
+			deactivate();
+			mHandler.post(new Runnable() {
+						public void run() {
+							IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, buttonEvent), true);
+							IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, buttonEvent), true);
+						}
+			});
 		} catch (RemoteException e) {
 			Log.e(TAG, "All your button are belong to: " + e);
 		}
