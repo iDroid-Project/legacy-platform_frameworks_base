@@ -230,10 +230,13 @@ public class StatusBarService extends IStatusBar.Stub
     int mViewDelta;
     int[] mAbsPos = new int[2];
 	
+	// SOFT BUTTON
+	private int mKey = KeyEvent.KEYCODE_BACK;
+	
     // for disabling the status bar
     ArrayList<DisableRecord> mDisableRecords = new ArrayList<DisableRecord>();
     int mDisabled = 0;
-
+	
     /**
      * Construct the service, add the status bar view to the window manager
      */
@@ -251,54 +254,65 @@ public class StatusBarService extends IStatusBar.Stub
     /* SOFT BUTTONS */
     private void setupSoftButtons()
     {
-	LinearLayout sendButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_1);
-	LinearLayout homeButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_2);
-	LinearLayout backButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_3);
-	LinearLayout endButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_4);
-	sendButton.setOnClickListener(idroidButtonListener);
-	homeButton.setOnClickListener(idroidButtonListener);
-	backButton.setOnClickListener(idroidButtonListener);
-	endButton.setOnClickListener(idroidButtonListener);
+		LinearLayout sendButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_1);
+		LinearLayout homeButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_2);
+		LinearLayout backButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_3);
+		LinearLayout endButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_4);
+		sendButton.setOnClickListener(idroidButtonListener);
+		homeButton.setOnClickListener(idroidButtonListener);
+		backButton.setOnClickListener(idroidButtonListener);
+		endButton.setOnClickListener(idroidButtonListener);
     }
-
+	
+	private void runKey(int key) {
+		mKey = key;
+		mHandler.post(new Runnable() {
+			public void run() {
+				press(mKey);
+			}
+		});
+	}
+	
+	public void press(int key) {
+		sendKey(new KeyEvent(KeyEvent.ACTION_DOWN, key));
+		sendKey(new KeyEvent(KeyEvent.ACTION_UP, key));
+	}
+	
+	public void sendKey(KeyEvent event) {
+		try {
+				IWindowManager.Stub.asInterface(ServiceManager.getService("window"))
+														.injectKeyEvent(event, true);
+		} catch (RemoteException e) {
+			Log.e(TAG, "sendKey exception " + e);
+		}
+	}
+	
     private View.OnClickListener idroidButtonListener = new View.OnClickListener() {
-	public void onClick(View v) {
-		int buttonEvent;
-		int viewId = v.getId();
-		
-		switch(viewId) {
-			case R.id.exp_idroid_btn_1:
+		public void onClick(View v) {
+			int buttonEvent;
+			int viewId = v.getId();
+
+			switch(viewId) {
+				case R.id.exp_idroid_btn_1:
 				buttonEvent = KeyEvent.KEYCODE_CALL;
 				break;
-			case R.id.exp_idroid_btn_2:
+				case R.id.exp_idroid_btn_2:
 				buttonEvent = KeyEvent.KEYCODE_HOME;
 				break;
-			case R.id.exp_idroid_btn_3:
+				case R.id.exp_idroid_btn_3:
 				buttonEvent = KeyEvent.KEYCODE_BACK;
 				break;
-			case R.id.exp_idroid_btn_4:
+				case R.id.exp_idroid_btn_4:
 				buttonEvent = KeyEvent.KEYCODE_ENDCALL;
 				break;
-			default:
+				default:
 				/* Stop shit from crashing, just send back */
 				buttonEvent = KeyEvent.KEYCODE_BACK;
 				break;			
+			}
+			runKey(buttonEvent);
+			return;
 		}
-
-		try {
-			deactivate();
-			mHandler.post(new Runnable() {
-						public void run() {
-							IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, buttonEvent), true);
-							IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, buttonEvent), true);
-						}
-			});
-		} catch (RemoteException e) {
-			Log.e(TAG, "All your button are belong to: " + e);
-		}
-		
-		return;
-	}
     };
     /* END SOFT BUTTONS */
 	
