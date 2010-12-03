@@ -455,7 +455,7 @@ public class StatusBarService extends IStatusBar.Stub
 	
 	public void triggerButton(int key) {
 		enforceStatusBar();
-		addPendingOp(OP_BUTTON_PRESS, int key);
+		addPendingOp(OP_BUTTON_PRESS, key);
 	}
 	
     private void enforceStatusBar() {
