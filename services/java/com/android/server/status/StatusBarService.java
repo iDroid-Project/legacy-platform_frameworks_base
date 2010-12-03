@@ -105,6 +105,8 @@ public class StatusBarService extends IStatusBar.Stub
     private static final int OP_EXPAND = 5;
     private static final int OP_TOGGLE = 6;
     private static final int OP_DISABLE = 7;
+	private static final int OP_BUTTON_PRESS = 8;
+
     private class PendingOp {
         IBinder key;
         int code;
@@ -270,7 +272,26 @@ public class StatusBarService extends IStatusBar.Stub
     private View.OnClickListener idroidButtonListener = new View.OnClickListener() {
 		public void onClick(View v) {
 			deactivate();
-			(new Thread(new SoftButtons(v))).start();
+			int viewId = v.getId();
+			int buttonEvent;
+			switch(viewId) {
+				case R.id.exp_idroid_btn_1:
+					buttonEvent = KeyEvent.KEYCODE_CALL;
+					break;
+				case R.id.exp_idroid_btn_2:
+					buttonEvent = KeyEvent.KEYCODE_HOME;
+					break;
+				case R.id.exp_idroid_btn_3:
+					buttonEvent = KeyEvent.KEYCODE_BACK;
+					break;
+				case R.id.exp_idroid_btn_4:
+					buttonEvent = KeyEvent.KEYCODE_ENDCALL;
+					break;
+				default:
+					buttonEvent = KeyEvent.KEYCODE_BACK;
+					break;
+			}
+			triggerButton(buttonEvent);
 			return;
 		}
     };
@@ -431,7 +452,12 @@ public class StatusBarService extends IStatusBar.Stub
         enforceStatusBar();
         addPendingOp(OP_REMOVE_ICON, key, null, null, -1);
     }
-
+	
+	public void triggerButton(int key) {
+		enforceStatusBar();
+		addPendingOp(OP_BUTTON_PRESS, int key);
+	}
+	
     private void enforceStatusBar() {
         mContext.enforceCallingOrSelfPermission(
                 android.Manifest.permission.STATUS_BAR,
@@ -443,7 +469,7 @@ public class StatusBarService extends IStatusBar.Stub
                 android.Manifest.permission.EXPAND_STATUS_BAR,
                 "StatusBarService");
     }
-
+	
     // ================================================================================
     // Can be called from any thread
     // ================================================================================
@@ -471,7 +497,7 @@ public class StatusBarService extends IStatusBar.Stub
     public void setIconVisibility(IBinder key, boolean visible) {
         addPendingOp(OP_SET_VISIBLE, key, visible);
     }
-
+	
     private void addPendingOp(int code, IBinder key, IconData data, NotificationData n, int i) {
         synchronized (mQueueLock) {
             PendingOp op = new PendingOp();
@@ -604,6 +630,8 @@ public class StatusBarService extends IStatusBar.Stub
             boolean expand = wasExpanded;
             boolean doExpand = false;
             boolean doDisable = false;
+			boolean doButtonPress = false;
+			int buttonAction = KeyEvent.KEYCODE_BACK;
             int disableWhat = 0;
             int N = queue.size();
             while (N > 0) {
@@ -668,6 +696,10 @@ public class StatusBarService extends IStatusBar.Stub
                             doDisable = true;
                             disableWhat = op.integer;
                             break;
+						case OP_BUTTON_PRESS:
+							doButtonPress = true;
+							buttonAction = op.integer;
+							break;
                     }
                 }
                 if (doVisibility && op.code != OP_REMOVE_ICON) {
@@ -689,6 +721,9 @@ public class StatusBarService extends IStatusBar.Stub
             if (doDisable) {
                 performDisableActions(disableWhat);
             }
+			if (doButtonPress) {
+				sendKeyupKeydown(buttonAction);
+			}
         }
     }
 
@@ -1048,6 +1083,11 @@ public class StatusBarService extends IStatusBar.Stub
         performFling(y, -2000.0f, true);
     }
     
+	void sendKeyupKeydown(int key) {
+		IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, key), true);
+		IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, key), true);
+	}
+
     void performExpand() {
         if (SPEW) Slog.d(TAG, "performExpand: mExpanded=" + mExpanded);
         if ((mDisabled & StatusBarManager.DISABLE_EXPAND) != 0) {
