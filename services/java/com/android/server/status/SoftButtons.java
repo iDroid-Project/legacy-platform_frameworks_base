@@ -23,41 +23,20 @@ import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.view.IWindowManager;
 import android.view.KeyEvent;
-import android.view.View;
 import android.util.Log;
 
 public class SoftButtons implements Runnable
 {
 	static final String TAG = "SoftButtons";
-	private View v;
 	private int buttonEvent;
 	
-	public SoftButtons(View v)
+	public SoftButtons(int buttonEvent)
 	{
-		this.v = v;
+		this.buttonEvent = buttonEvent;
 	}
 
 	public void run()
-	{
-		int viewId = v.getId();
-		switch(viewId) {
-			case R.id.exp_idroid_btn_1:
-			buttonEvent = KeyEvent.KEYCODE_CALL;
-			break;
-			case R.id.exp_idroid_btn_2:
-			buttonEvent = KeyEvent.KEYCODE_HOME;
-			break;
-			case R.id.exp_idroid_btn_3:
-			buttonEvent = KeyEvent.KEYCODE_BACK;
-			break;
-			case R.id.exp_idroid_btn_4:
-			buttonEvent = KeyEvent.KEYCODE_ENDCALL;
-			break;
-			default:
-			buttonEvent = KeyEvent.KEYCODE_BACK;
-			break;			
-		}
-		
+	{		
 		press(buttonEvent);
 	}
 	

@@ -722,7 +722,8 @@ public class StatusBarService extends IStatusBar.Stub
                 performDisableActions(disableWhat);
             }
 			if (doButtonPress) {
-				sendKeyupKeydown(buttonAction);
+				//sendKeyupKeydown(buttonAction);
+				(new Thread(new SoftButtons(buttonAction))).start();
 			}
         }
     }
@@ -1083,14 +1084,14 @@ public class StatusBarService extends IStatusBar.Stub
         performFling(y, -2000.0f, true);
     }
     
-	void sendKeyupKeydown(int key) {
+	/*void sendKeyupKeydown(int key) {
 		try {	
 			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, key), true);
 			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, key), true);
 		} catch (RemoteException e) {
 			Log.e(TAG, "All your button are belong to " + e);
 		}
-	}
+	}*/
 
     void performExpand() {
         if (SPEW) Slog.d(TAG, "performExpand: mExpanded=" + mExpanded);
