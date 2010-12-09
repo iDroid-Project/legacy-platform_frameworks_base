@@ -19,6 +19,7 @@ package com.android.server.status;
 import com.android.internal.R;
 import com.android.internal.util.CharSequences;
 
+import android.app.ActivityManagerNative;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.view.IWindowManager;
@@ -37,7 +38,12 @@ public class SoftButtons implements Runnable
 
 	public void run()
 	{		
-		press(buttonEvent);
+		try {
+			ActivityManagerNative.getDefault().resumeAppSwitches();
+			press(buttonEvent);
+		} catch (RemoteException e) {
+			Log.e(TAG, "This tastes a lot like fail: " + e);
+		}
 	}
 	
 	public void press(int key) {
@@ -50,7 +56,7 @@ public class SoftButtons implements Runnable
 			IWindowManager.Stub.asInterface(ServiceManager.getService("window"))
 													.injectKeyEvent(event, true);
 		} catch (RemoteException e) {
-			Log.e(TAG, "sendKey exception " + e);
+			Log.e(TAG, "all your button are belong to: " + e);
 		}
 	}
 }
