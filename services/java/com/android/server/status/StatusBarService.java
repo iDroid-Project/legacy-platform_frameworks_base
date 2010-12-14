@@ -143,13 +143,13 @@ public class StatusBarService extends IStatusBar.Stub
         @Override
         public boolean dispatchKeyEvent(KeyEvent event) {
             boolean down = event.getAction() == KeyEvent.ACTION_DOWN;
-            switch (event.getKeyCode()) {
+            /*switch (event.getKeyCode()) {
             case KeyEvent.KEYCODE_BACK:
                 if (!down) {
                     StatusBarService.this.deactivate();
                 }
                 return true;
-            }
+            }*/
             return super.dispatchKeyEvent(event);
         }
     }
@@ -254,17 +254,18 @@ public class StatusBarService extends IStatusBar.Stub
     {
 		LinearLayout sendButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_1);
 		LinearLayout homeButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_2);
-		LinearLayout backButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_3);
-		LinearLayout endButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_4);
+		LinearLayout menuButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_3);
+		LinearLayout backButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_4);
+		LinearLayout endButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_5);
 		
-		/* We haz 2 spares here and no use for them right now, maybe later
-		LinearLayout anotherButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_5);
+		
+		/* We haz 1 spare here and no use for it right now, maybe later
 		LinearLayout yetAnotherButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_6);
-		anotherButton.setOnClickListener(idroidButtonListener);
 		yetAnotherButton.setOnClickListener(idroidButtonListener);
 		*/
 		sendButton.setOnClickListener(idroidButtonListener);
 		homeButton.setOnClickListener(idroidButtonListener);
+		menuButton.setOnClickListener(idroidButtonListener);
 		backButton.setOnClickListener(idroidButtonListener);
 		endButton.setOnClickListener(idroidButtonListener);
     }
@@ -282,9 +283,12 @@ public class StatusBarService extends IStatusBar.Stub
 					buttonEvent = KeyEvent.KEYCODE_HOME;
 					break;
 				case R.id.exp_idroid_btn_3:
+					buttonEvent = KeyEvent.KEYCODE_MENU;
+					break;				
+				case R.id.exp_idroid_btn_4:
 					buttonEvent = KeyEvent.KEYCODE_BACK;
 					break;
-				case R.id.exp_idroid_btn_4:
+				case R.id.exp_idroid_btn_5:
 					buttonEvent = KeyEvent.KEYCODE_ENDCALL;
 					break;
 				default:
@@ -1084,15 +1088,6 @@ public class StatusBarService extends IStatusBar.Stub
         performFling(y, -2000.0f, true);
     }
     
-	/*void sendKeyupKeydown(int key) {
-		try {	
-			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, key), true);
-			IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(new KeyEvent(KeyEvent.ACTION_UP, key), true);
-		} catch (RemoteException e) {
-			Log.e(TAG, "All your button are belong to " + e);
-		}
-	}*/
-
     void performExpand() {
         if (SPEW) Slog.d(TAG, "performExpand: mExpanded=" + mExpanded);
         if ((mDisabled & StatusBarManager.DISABLE_EXPAND) != 0) {
