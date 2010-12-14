@@ -87,59 +87,9 @@
                         android:layout_height="0dip"
                         android:layout_weight="1"
                         android:scaleType="center"
-						android:src="@drawable/stat_idroidbtn_menu"
-                        />
-            </LinearLayout>
-            <LinearLayout android:id="@+id/exp_idroid_btn_4"
-                android:layout_width="0dip"
-                android:layout_weight="1"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:clickable="true"
-                android:focusable="true"
-                    android:background="@drawable/stat_idroidbtn_bg"
-           >
-                <ImageView android:id="@+id/exp_idroid_image_4"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dip"
-                        android:layout_weight="1"
-                        android:scaleType="center"
-						android:src="@drawable/stat_idroidbtn_back"
-                        />
-            </LinearLayout>
-            <LinearLayout android:id="@+id/exp_idroid_btn_5"
-                android:layout_width="0dip"
-                android:layout_weight="1"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="@drawable/stat_idroidbtn_bg"
-            >
-                <ImageView android:id="@+id/exp_idroid_image_5"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dip"
-                        android:layout_weight="1"
-                        android:scaleType="center"
 						android:src="@drawable/stat_idroidbtn_end"
                         />
             </LinearLayout>
-            <LinearLayout android:id="@+id/exp_idroid_btn_6"
-                android:layout_width="0dip"
-                android:layout_weight="1"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:clickable="true"
-                android:focusable="true"
-                android:background="@drawable/stat_idroidbtn_bg"
-            >
-                <ImageView android:id="@+id/exp_idroid_image_6"
-                        android:layout_width="match_parent"
-                        android:layout_height="0dip"
-                        android:layout_weight="1"
-                        android:scaleType="center"
-                        />
-        </LinearLayout>
 		</LinearLayout>
         <!-- End Soft Buttons Widget -->
 
