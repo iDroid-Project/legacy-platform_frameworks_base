@@ -129,9 +129,8 @@ Menu. See <a href="menu-resource.html">Menu Resource</a>.</td>
 
   <tr>
     <td><code>raw/</code></td>
-    <td><p>Arbitrary files to save in their raw form. Files in here are not compressed by the
-system. To open these resources with a raw {@link java.io.InputStream}, call {@link
-android.content.res.Resources#openRawResource(int)
+    <td><p>Arbitrary files to save in their raw form. To open these resources with a raw
+{@link java.io.InputStream}, call {@link android.content.res.Resources#openRawResource(int)
 Resources.openRawResource()} with the resource ID, which is {@code R.raw.<em>filename</em>}.</p>
       <p>However, if you need access to original file names and file hierarchy, you might consider
 saving some resources in the {@code
@@ -330,7 +329,8 @@ indicates the current locale.</p>
       <td>
         <code>small</code><br/>
         <code>normal</code><br/>
-        <code>large</code>
+        <code>large</code><br/>
+        <code>xlarge</code>
       </td>
       <td>
         <ul class="nolist">
@@ -348,6 +348,10 @@ indicates the current locale.</p>
         medium-density VGA screen.  Such a screen has significantly more
         available space in both width and height than an HVGA display.
         Examples are VGA and WVGA medium density screens.</li>
+        <li>{@code xlarge}: Screens that are considerably larger than the traditional
+        medium-density HVGA screen. In most cases, devices with extra large screens would be too
+large to carry in a pocket and would most likely be tablet-style devices. <em>Added in API Level
+9.</em></li>
         </ul>
         <p><em>Added in API Level 4.</em></p>
         <p>See <a href="{@docRoot}guide/practices/screens_support.html">Supporting Multiple
@@ -438,6 +442,7 @@ application during runtime.</p>
         <code>ldpi</code><br/>
         <code>mdpi</code><br/>
         <code>hdpi</code><br/>
+        <code>xhdpi</code><br/>
         <code>nodpi</code>
       </td>
       <td>
@@ -446,6 +451,8 @@ application during runtime.</p>
           <li>{@code mdpi}: Medium-density (on traditional HVGA) screens; approximately
 160dpi.</li>
           <li>{@code hdpi}: High-density screens; approximately 240dpi.</li>
+          <li>{@code xhdpi}: Extra high-density screens; approximately 320dpi. <em>Added in API
+Level 8</em></li>
           <li>{@code nodpi}: This can be used for bitmap resources that you do not want to be scaled
 to match the device density.</li>
         </ul>

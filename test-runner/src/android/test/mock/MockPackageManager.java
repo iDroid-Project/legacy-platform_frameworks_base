@@ -127,6 +127,12 @@ public class MockPackageManager extends PackageManager {
     }
 
     @Override
+    public ProviderInfo getProviderInfo(ComponentName className, int flags)
+    throws NameNotFoundException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public List<PackageInfo> getInstalledPackages(int flags) {
         throw new UnsupportedOperationException();
     }
@@ -265,6 +271,26 @@ public class MockPackageManager extends PackageManager {
 
     @Override
     public Drawable getApplicationIcon(String packageName) throws NameNotFoundException {
+        throw new UnsupportedOperationException();
+    }
+    
+    @Override
+    public Drawable getActivityLogo(ComponentName activityName) throws NameNotFoundException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Drawable getActivityLogo(Intent intent) throws NameNotFoundException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Drawable getApplicationLogo(ApplicationInfo info) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Drawable getApplicationLogo(String packageName) throws NameNotFoundException {
         throw new UnsupportedOperationException();
     }
 
@@ -461,6 +487,11 @@ public class MockPackageManager extends PackageManager {
     
     @Override
     public boolean isSafeMode() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setPackageObbPath(String packageName, String path) {
         throw new UnsupportedOperationException();
     }
 }

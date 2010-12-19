@@ -21,6 +21,7 @@ import android.util.Log;
 import com.android.internal.os.IDropBoxManagerService;
 
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -61,7 +62,7 @@ public class DropBoxManager {
      * This may include a reference to a stream, so you must call
      * {@link #close()} when you are done using it.
      */
-    public static class Entry implements Parcelable {
+    public static class Entry implements Parcelable, Closeable {
         private final String mTag;
         private final long mTimeMillis;
 
@@ -152,7 +153,7 @@ public class DropBoxManager {
         /** @return time when the entry was originally created. */
         public long getTimeMillis() { return mTimeMillis; }
 
-        /** @return flags describing the content returned by @{link #getInputStream()}. */
+        /** @return flags describing the content returned by {@link #getInputStream()}. */
         public int getFlags() { return mFlags & ~IS_GZIPPED; }  // getInputStream() decompresses.
 
         /**
@@ -267,7 +268,7 @@ public class DropBoxManager {
         if (file == null) throw new NullPointerException("file == null");
         Entry entry = new Entry(tag, 0, file, flags);
         try {
-            mService.add(new Entry(tag, 0, file, flags));
+            mService.add(entry);
         } catch (RemoteException e) {
             // ignore
         } finally {
@@ -288,8 +289,8 @@ public class DropBoxManager {
     }
 
     /**
-     * Gets the next entry from the drop box *after* the specified time.
-     * Requires android.permission.READ_LOGS.  You must always call
+     * Gets the next entry from the drop box <em>after</em> the specified time.
+     * Requires <code>android.permission.READ_LOGS</code>.  You must always call
      * {@link Entry#close()} on the return value!
      *
      * @param tag of entry to look for, null for all tags

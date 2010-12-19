@@ -57,7 +57,7 @@ void usage(void)
     fprintf(stderr,
         " %s p[ackage] [-d][-f][-m][-u][-v][-x][-z][-M AndroidManifest.xml] \\\n"
         "        [-0 extension [-0 extension ...]] [-g tolerance] [-j jarfile] \\\n"
-        "        [--min-sdk-version VAL] [--target-sdk-version VAL] \\\n"
+        "        [--debug-mode] [--min-sdk-version VAL] [--target-sdk-version VAL] \\\n"
         "        [--app-version VAL] [--app-version-name TEXT] [--custom-package VAL] \\\n"
         "        [--rename-manifest-package PACKAGE] \\\n"
         "        [--rename-instrumentation-target-package PACKAGE] \\\n"
@@ -67,6 +67,7 @@ void usage(void)
         "        [-A asset-source-dir]  [-G class-list-file] [-P public-definitions-file] \\\n"
         "        [-S resource-sources [-S resource-sources ...]] "
         "        [-F apk-file] [-J R-file-dir] \\\n"
+        "        [--product product1,product2,...] \\\n"
         "        [raw-files-dir [raw-files-dir] ...]\n"
         "\n"
         "   Package the android resources.  It will read assets and resources that are\n"
@@ -124,6 +125,9 @@ void usage(void)
         "   -0  specifies an additional extension for which such files will not\n"
         "       be stored compressed in the .apk.  An empty string means to not\n"
         "       compress any files at all.\n"
+        "   --debug-mode\n"
+        "       inserts android:debuggable=\"true\" in to the application node of the\n"
+        "       manifest, making the application debuggable even on production devices.\n"
         "   --min-sdk-version\n"
         "       inserts android:minSdkVersion in to manifest.  If the version is 7 or\n"
         "       higher, the default encoding for resources will be in UTF-8.\n"
@@ -151,6 +155,9 @@ void usage(void)
         "       components target the given package.  Useful when used in\n"
         "       conjunction with --rename-manifest-package to fix tests against\n"
         "       a package that has been renamed.\n"
+        "   --product\n"
+        "       Specifies which variant to choose for strings that have\n"
+        "       product variants\n"
         "   --utf16\n"
         "       changes default encoding for resources to UTF-16.  Only useful when API\n"
         "       level is set to 7 or higher where the default encoding is UTF-8.\n");
@@ -392,7 +399,9 @@ int main(int argc, char* const argv[])
                 }
                 break;
             case '-':
-                if (strcmp(cp, "-min-sdk-version") == 0) {
+                if (strcmp(cp, "-debug-mode") == 0) {
+                    bundle.setDebugMode(true);
+                } else if (strcmp(cp, "-min-sdk-version") == 0) {
                     argc--;
                     argv++;
                     if (!argc) {
@@ -479,6 +488,15 @@ int main(int argc, char* const argv[])
                     bundle.setInstrumentationPackageNameOverride(argv[0]);
                 } else if (strcmp(cp, "-auto-add-overlay") == 0) {
                     bundle.setAutoAddOverlay(true);
+                } else if (strcmp(cp, "-product") == 0) {
+                    argc--;
+                    argv++;
+                    if (!argc) {
+                        fprintf(stderr, "ERROR: No argument supplied for '--product' option\n");
+                        wantUsage = true;
+                        goto bail;
+                    }
+                    bundle.setProduct(argv[0]);
                 } else {
                     fprintf(stderr, "ERROR: Unknown option '-%s'\n", cp);
                     wantUsage = true;

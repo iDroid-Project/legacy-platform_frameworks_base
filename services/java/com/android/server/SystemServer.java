@@ -17,7 +17,7 @@
 package com.android.server;
 
 import com.android.server.am.ActivityManagerService;
-import com.android.server.status.StatusBarService;
+import com.android.internal.app.ShutdownThread;
 import com.android.internal.os.BinderInternal;
 import com.android.internal.os.SamplingProfilerIntegration;
 
@@ -35,13 +35,19 @@ import android.content.pm.IPackageManager;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.media.AudioService;
-import android.os.*;
+import android.os.Looper;
+import android.os.RemoteException;
+import android.os.ServiceManager;
+import android.os.StrictMode;
+import android.os.SystemClock;
+import android.os.SystemProperties;
 import android.provider.Contacts.People;
 import android.provider.Settings;
 import android.server.BluetoothA2dpService;
 import android.server.BluetoothService;
 import android.server.search.SearchManagerService;
 import android.util.EventLog;
+import android.util.Log;
 import android.util.Slog;
 import android.accounts.AccountManagerService;
 
@@ -81,7 +87,26 @@ class ServerThread extends Thread {
                 android.os.Process.THREAD_PRIORITY_FOREGROUND);
 
         BinderInternal.disableBackgroundScheduling(true);
-        
+        android.os.Process.setCanSelfBackground(false);
+
+        // Check whether we failed to shut down last time we tried.
+        {
+            final String shutdownAction = SystemProperties.get(
+                    ShutdownThread.SHUTDOWN_ACTION_PROPERTY, "");
+            if (shutdownAction != null && shutdownAction.length() > 0) {
+                boolean reboot = (shutdownAction.charAt(0) == '1');
+
+                final String reason;
+                if (shutdownAction.length() > 1) {
+                    reason = shutdownAction.substring(1, shutdownAction.length());
+                } else {
+                    reason = null;
+                }
+
+                ShutdownThread.rebootOrShutdown(reboot, reason);
+            }
+        }
+
         String factoryTestStr = SystemProperties.get("ro.factorytest");
         int factoryTest = "".equals(factoryTestStr) ? SystemServer.FACTORY_TEST_OFF
                 : Integer.parseInt(factoryTestStr);
@@ -97,6 +122,7 @@ class ServerThread extends Thread {
         BluetoothA2dpService bluetoothA2dp = null;
         HeadsetObserver headset = null;
         DockObserver dock = null;
+        UsbObserver usb = null;
         UiModeManagerService uiMode = null;
         RecognitionManagerService recognition = null;
         ThrottleService throttle = null;
@@ -164,10 +190,6 @@ class ServerThread extends Thread {
             Watchdog.getInstance().init(context, battery, power, alarm,
                     ActivityManagerService.self());
 
-            // Sensor Service is needed by Window Manager, so this goes first
-            Slog.i(TAG, "Sensor Service");
-            ServiceManager.addService(Context.SENSOR_SERVICE, new SensorService(context));
-
             Slog.i(TAG, "Window Manager");
             wm = WindowManagerService.main(context, power,
                     factoryTest != SystemServer.FACTORY_TEST_LOW_LEVEL);
@@ -206,7 +228,7 @@ class ServerThread extends Thread {
         }
 
         DevicePolicyManagerService devicePolicy = null;
-        StatusBarService statusBar = null;
+        StatusBarManagerService statusBar = null;
         InputMethodManagerService imm = null;
         AppWidgetService appWidget = null;
         NotificationManagerService notification = null;
@@ -224,10 +246,10 @@ class ServerThread extends Thread {
 
             try {
                 Slog.i(TAG, "Status Bar");
-                statusBar = new StatusBarService(context);
+                statusBar = new StatusBarManagerService(context);
                 ServiceManager.addService(Context.STATUS_BAR_SERVICE, statusBar);
             } catch (Throwable e) {
-                Slog.e(TAG, "Failure starting StatusBarService", e);
+                Slog.e(TAG, "Failure starting StatusBarManagerService", e);
             }
 
             try {
@@ -256,7 +278,8 @@ class ServerThread extends Thread {
             try {
                 Slog.i(TAG, "NetworkManagement Service");
                 ServiceManager.addService(
-                        Context.NETWORKMANAGEMENT_SERVICE, new NetworkManagementService(context));
+                        Context.NETWORKMANAGEMENT_SERVICE,
+                        NetworkManagementService.create(context));
             } catch (Throwable e) {
                 Slog.e(TAG, "Failure starting NetworkManagement Service", e);
             }
@@ -374,8 +397,16 @@ class ServerThread extends Thread {
             }
 
             try {
+                Slog.i(TAG, "USB Observer");
+                // Listen for USB changes
+                usb = new UsbObserver(context);
+            } catch (Throwable e) {
+                Slog.e(TAG, "Failure starting UsbObserver", e);
+            }
+
+            try {
                 Slog.i(TAG, "UI Mode Manager Service");
-                // Listen for dock station changes
+                // Listen for UI mode changes
                 uiMode = new UiModeManagerService(context);
             } catch (Throwable e) {
                 Slog.e(TAG, "Failure starting UiModeManagerService", e);
@@ -403,13 +434,7 @@ class ServerThread extends Thread {
             } catch (Throwable e) {
                 Slog.e(TAG, "Failure starting Recognition Service", e);
             }
-
-            try {
-                com.android.server.status.StatusBarPolicy.installIcons(context, statusBar);
-            } catch (Throwable e) {
-                Slog.e(TAG, "Failure installing status bar icons", e);
-            }
-
+            
             try {
                 Slog.i(TAG, "DiskStats Service");
                 ServiceManager.addService("diskstats", new DiskStatsService(context));
@@ -464,9 +489,11 @@ class ServerThread extends Thread {
         }
 
         // These are needed to propagate to the runnable below.
+        final StatusBarManagerService statusBarF = statusBar;
         final BatteryService batteryF = battery;
         final ConnectivityService connectivityF = connectivity;
         final DockObserver dockF = dock;
+        final UsbObserver usbF = usb;
         final ThrottleService throttleF = throttle;
         final UiModeManagerService uiModeF = uiMode;
         final AppWidgetService appWidgetF = appWidget;
@@ -485,9 +512,11 @@ class ServerThread extends Thread {
             public void run() {
                 Slog.i(TAG, "Making services ready");
 
+                if (statusBarF != null) statusBarF.systemReady2();
                 if (batteryF != null) batteryF.systemReady();
                 if (connectivityF != null) connectivityF.systemReady();
                 if (dockF != null) dockF.systemReady();
+                if (usbF != null) usbF.systemReady();
                 if (uiModeF != null) uiModeF.systemReady();
                 if (recognitionF != null) recognitionF.systemReady();
                 Watchdog.getInstance().start();
@@ -502,6 +531,11 @@ class ServerThread extends Thread {
                 if (throttleF != null) throttleF.systemReady();
             }
         });
+
+        // For debug builds, log event loop stalls to dropbox for analysis.
+        if (StrictMode.conditionallyEnableDebugLogging()) {
+            Slog.i(TAG, "Enabled StrictMode for system server main thread.");
+        }
 
         Looper.loop();
         Slog.d(TAG, "System ServerThread is exiting!");
@@ -548,6 +582,10 @@ public class SystemServer
     static Timer timer;
     static final long SNAPSHOT_INTERVAL = 60 * 60 * 1000; // 1hr
 
+    // The earliest supported time.  We pick one day into 1970, to
+    // give any timezone code room without going into negative time.
+    private static final long EARLIEST_SUPPORTED_TIME = 86400 * 1000;
+
     /**
      * This method is called from Zygote to initialize the system. This will cause the native
      * services (SurfaceFlinger, AudioFlinger, etc..) to be started. After that it will call back
@@ -556,6 +594,16 @@ public class SystemServer
     native public static void init1(String[] args);
 
     public static void main(String[] args) {
+        if (System.currentTimeMillis() < EARLIEST_SUPPORTED_TIME) {
+            // If a device's clock is before 1970 (before 0), a lot of
+            // APIs crash dealing with negative numbers, notably
+            // java.io.File#setLastModified, so instead we fake it and
+            // hope that time from cell towers or NTP fixes it
+            // shortly.
+            Slog.w(TAG, "System clock is before 1970; setting to 1970.");
+            SystemClock.setCurrentTimeMillis(EARLIEST_SUPPORTED_TIME);
+        }
+
         if (SamplingProfilerIntegration.isEnabled()) {
             SamplingProfilerIntegration.start();
             timer = new Timer();

@@ -18,9 +18,7 @@ package android.app;
 
 import android.os.Bundle;
 import android.os.Handler;
-import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -316,7 +314,7 @@ public class ListActivity extends Activity {
     }
 
     private AdapterView.OnItemClickListener mOnClickListener = new AdapterView.OnItemClickListener() {
-        public void onItemClick(AdapterView parent, View v, int position, long id)
+        public void onItemClick(AdapterView<?> parent, View v, int position, long id)
         {
             onListItemClick((ListView)parent, v, position, id);
         }

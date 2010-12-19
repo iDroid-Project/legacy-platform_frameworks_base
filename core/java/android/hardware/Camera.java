@@ -50,7 +50,7 @@ import android.os.Message;
  * <p>To take pictures with this class, use the following steps:</p>
  *
  * <ol>
- * <li>Obtain an instance of Camera from {@link #open()}.
+ * <li>Obtain an instance of Camera from {@link #open(int)}.
  *
  * <li>Get existing (default) settings with {@link #getParameters()}.
  *
@@ -102,7 +102,7 @@ import android.os.Message;
  * <p>This class is not thread-safe, and is meant for use from one event thread.
  * Most long-running operations (preview, focus, photo capture, etc) happen
  * asynchronously and invoke callbacks as necessary.  Callbacks will be invoked
- * on the event thread {@link #open()} was called from.  This class's methods
+ * on the event thread {@link #open(int)} was called from.  This class's methods
  * must never be called from multiple threads at once.</p>
  *
  * <p class="caution"><strong>Caution:</strong> Different Android-powered devices
@@ -114,7 +114,7 @@ import android.os.Message;
 public class Camera {
     private static final String TAG = "Camera";
 
-    // These match the enums in frameworks/base/include/ui/Camera.h
+    // These match the enums in frameworks/base/include/camera/Camera.h
     private static final int CAMERA_MSG_ERROR            = 0x001;
     private static final int CAMERA_MSG_SHUTTER          = 0x002;
     private static final int CAMERA_MSG_FOCUS            = 0x004;
@@ -140,12 +140,65 @@ public class Camera {
     private boolean mWithBuffer;
 
     /**
-     * Creates a new Camera object.
+     * Returns the number of physical cameras available on this device.
+     */
+    public native static int getNumberOfCameras();
+
+    /**
+     * Returns the information about a particular camera.
+     * If {@link #getNumberOfCameras()} returns N, the valid id is 0 to N-1.
+     */
+    public native static void getCameraInfo(int cameraId, CameraInfo cameraInfo);
+
+    /**
+     * Information about a camera
+     */
+    public static class CameraInfo {
+        /**
+         * The facing of the camera is opposite to that of the screen.
+         */
+        public static final int CAMERA_FACING_BACK = 0;
+
+        /**
+         * The facing of the camera is the same as that of the screen.
+         */
+        public static final int CAMERA_FACING_FRONT = 1;
+
+        /**
+         * The direction that the camera faces to. It should be
+         * CAMERA_FACING_BACK or CAMERA_FACING_FRONT.
+         */
+        public int facing;
+
+        /**
+         * The orientation of the camera image. The value is the angle that the
+         * camera image needs to be rotated clockwise so it shows correctly on
+         * the display in its natural orientation. It should be 0, 90, 180, or 270.
+         *
+         * For example, suppose a device has a naturally tall screen. The
+         * back-facing camera sensor is mounted in landscape. You are looking at
+         * the screen. If the top side of the camera sensor is aligned with the
+         * right edge of the screen in natural orientation, the value should be
+         * 90. If the top side of a front-facing camera sensor is aligned with
+         * the right of the screen, the value should be 270.
+         *
+         * @see #setDisplayOrientation(int)
+         * @see #setRotation(int)
+         * @see #setPreviewSize(int, int)
+         * @see #setPictureSize(int, int)
+         * @see #setJpegThumbnailSize(int, int)
+         */
+        public int orientation;
+    };
+
+    /**
+     * Creates a new Camera object to access a particular hardware camera.
      *
      * <p>You must call {@link #release()} when you are done using the camera,
      * otherwise it will remain locked and be unavailable to other applications.
      *
-     * <p>Your application should only have one Camera object active at a time.
+     * <p>Your application should only have one Camera object active at a time
+     * for a particular hardware camera.
      *
      * <p>Callbacks from other methods are delivered to the event loop of the
      * thread which called open().  If this thread has no event loop, then
@@ -157,15 +210,35 @@ public class Camera {
      * worker thread (possibly using {@link android.os.AsyncTask}) to avoid
      * blocking the main application UI thread.
      *
+     * @param cameraId the hardware camera to access, between 0 and
+     *     {@link #getNumberOfCameras()}-1.
      * @return a new Camera object, connected, locked and ready for use.
      * @throws RuntimeException if connection to the camera service fails (for
      *     example, if the camera is in use by another process).
      */
-    public static Camera open() {
-        return new Camera();
+    public static Camera open(int cameraId) {
+        return new Camera(cameraId);
     }
 
-    Camera() {
+    /**
+     * Creates a new Camera object to access the first back-facing camera on the
+     * device. If the device does not have a back-facing camera, this returns
+     * null.
+     * @see #open(int)
+     */
+    public static Camera open() {
+        int numberOfCameras = getNumberOfCameras();
+        CameraInfo cameraInfo = new CameraInfo();
+        for (int i = 0; i < numberOfCameras; i++) {
+            getCameraInfo(i, cameraInfo);
+            if (cameraInfo.facing == CameraInfo.CAMERA_FACING_BACK) {
+                return new Camera(i);
+            }
+        }
+        return null;
+    }
+
+    Camera(int cameraId) {
         mShutterCallback = null;
         mRawImageCallback = null;
         mJpegCallback = null;
@@ -182,14 +255,14 @@ public class Camera {
             mEventHandler = null;
         }
 
-        native_setup(new WeakReference<Camera>(this));
+        native_setup(new WeakReference<Camera>(this), cameraId);
     }
 
     protected void finalize() {
         native_release();
     }
 
-    private native final void native_setup(Object camera_this);
+    private native final void native_setup(Object camera_this, int cameraId);
     private native final void native_release();
 
 
@@ -296,7 +369,7 @@ public class Camera {
     {
         /**
          * Called as preview frames are displayed.  This callback is invoked
-         * on the event thread {@link #open()} was called from.
+         * on the event thread {@link #open(int)} was called from.
          *
          * @param data the contents of the preview frame in the format defined
          *  by {@link android.graphics.ImageFormat}, which can be queried
@@ -705,17 +778,49 @@ public class Camera {
     public native final void stopSmoothZoom();
 
     /**
-     * Set the display orientation. This affects the preview frames and the
-     * picture displayed after snapshot. This method is useful for portrait
-     * mode applications.
+     * Set the clockwise rotation of preview display in degrees. This affects
+     * the preview frames and the picture displayed after snapshot. This method
+     * is useful for portrait mode applications. Note that preview display of
+     * front-facing cameras is flipped horizontally before the rotation, that
+     * is, the image is reflected along the central vertical axis of the camera
+     * sensor. So the users can see themselves as looking into a mirror.
      *
-     * This does not affect the order of byte array passed in
-     * {@link PreviewCallback#onPreviewFrame}. This method is not allowed to
-     * be called during preview.
+     * This does not affect the order of byte array passed in {@link
+     * PreviewCallback#onPreviewFrame}, JPEG pictures, or recorded videos. This
+     * method is not allowed to be called during preview.
      *
+     * If you want to make the camera image show in the same orientation as
+     * the display, you can use the following code.<p>
+     * <pre>
+     * public static void setCameraDisplayOrientation(Activity activity,
+     *         int cameraId, android.hardware.Camera camera) {
+     *     android.hardware.Camera.CameraInfo info =
+     *             new android.hardware.Camera.CameraInfo();
+     *     android.hardware.Camera.getCameraInfo(cameraId, info);
+     *     int rotation = activity.getWindowManager().getDefaultDisplay()
+     *             .getRotation();
+     *     int degrees = 0;
+     *     switch (rotation) {
+     *         case Surface.ROTATION_0: degrees = 0; break;
+     *         case Surface.ROTATION_90: degrees = 90; break;
+     *         case Surface.ROTATION_180: degrees = 180; break;
+     *         case Surface.ROTATION_270: degrees = 270; break;
+     *     }
+     *
+     *     int result;
+     *     if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
+     *         result = (info.orientation + degrees) % 360;
+     *         result = (360 - result) % 360;  // compensate the mirror
+     *     } else {  // back-facing
+     *         result = (info.orientation - degrees + 360) % 360;
+     *     }
+     *     camera.setDisplayOrientation(result);
+     * }
+     * </pre>
      * @param degrees the angle that the picture will be rotated clockwise.
      *                Valid values are 0, 90, 180, and 270. The starting
      *                position is 0 (landscape).
+     * @see #setPreviewDisplay(SurfaceHolder)
      */
     public native final void setDisplayOrientation(int degrees);
 
@@ -801,6 +906,7 @@ public class Camera {
      * Changes the settings for this Camera service.
      *
      * @param params the Parameters to use for this Camera service
+     * @throws RuntimeException if any parameter is invalid or not supported.
      * @see #getParameters()
      */
     public void setParameters(Parameters params) {
@@ -882,6 +988,7 @@ public class Camera {
         private static final String KEY_PREVIEW_SIZE = "preview-size";
         private static final String KEY_PREVIEW_FORMAT = "preview-format";
         private static final String KEY_PREVIEW_FRAME_RATE = "preview-frame-rate";
+        private static final String KEY_PREVIEW_FPS_RANGE = "preview-fps-range";
         private static final String KEY_PICTURE_SIZE = "picture-size";
         private static final String KEY_PICTURE_FORMAT = "picture-format";
         private static final String KEY_JPEG_THUMBNAIL_SIZE = "jpeg-thumbnail-size";
@@ -913,6 +1020,8 @@ public class Camera {
         private static final String KEY_ZOOM_RATIOS = "zoom-ratios";
         private static final String KEY_ZOOM_SUPPORTED = "zoom-supported";
         private static final String KEY_SMOOTH_ZOOM_SUPPORTED = "smooth-zoom-supported";
+        private static final String KEY_FOCUS_DISTANCES = "focus-distances";
+
         // Parameter key suffix for supported values.
         private static final String SUPPORTED_VALUES_SUFFIX = "-values";
 
@@ -974,21 +1083,81 @@ public class Camera {
          */
         public static final String FLASH_MODE_TORCH = "torch";
 
-        // Values for scene mode settings.
+        /**
+         * Scene mode is off.
+         */
         public static final String SCENE_MODE_AUTO = "auto";
+
+        /**
+         * Take photos of fast moving objects. Same as {@link
+         * #SCENE_MODE_SPORTS}.
+         */
         public static final String SCENE_MODE_ACTION = "action";
+
+        /**
+         * Take people pictures.
+         */
         public static final String SCENE_MODE_PORTRAIT = "portrait";
+
+        /**
+         * Take pictures on distant objects.
+         */
         public static final String SCENE_MODE_LANDSCAPE = "landscape";
+
+        /**
+         * Take photos at night.
+         */
         public static final String SCENE_MODE_NIGHT = "night";
+
+        /**
+         * Take people pictures at night.
+         */
         public static final String SCENE_MODE_NIGHT_PORTRAIT = "night-portrait";
+
+        /**
+         * Take photos in a theater. Flash light is off.
+         */
         public static final String SCENE_MODE_THEATRE = "theatre";
+
+        /**
+         * Take pictures on the beach.
+         */
         public static final String SCENE_MODE_BEACH = "beach";
+
+        /**
+         * Take pictures on the snow.
+         */
         public static final String SCENE_MODE_SNOW = "snow";
+
+        /**
+         * Take sunset photos.
+         */
         public static final String SCENE_MODE_SUNSET = "sunset";
+
+        /**
+         * Avoid blurry pictures (for example, due to hand shake).
+         */
         public static final String SCENE_MODE_STEADYPHOTO = "steadyphoto";
+
+        /**
+         * For shooting firework displays.
+         */
         public static final String SCENE_MODE_FIREWORKS = "fireworks";
+
+        /**
+         * Take photos of fast moving objects. Same as {@link
+         * #SCENE_MODE_ACTION}.
+         */
         public static final String SCENE_MODE_SPORTS = "sports";
+
+        /**
+         * Take indoor low-light shot.
+         */
         public static final String SCENE_MODE_PARTY = "party";
+
+        /**
+         * Capture the naturally warm color of scenes lit by candles.
+         */
         public static final String SCENE_MODE_CANDLELIGHT = "candlelight";
 
         /**
@@ -997,9 +1166,9 @@ public class Camera {
          */
         public static final String SCENE_MODE_BARCODE = "barcode";
 
-        // Values for focus mode settings.
         /**
-         * Auto-focus mode.
+         * Auto-focus mode. Applications should call {@link
+         * #autoFocus(AutoFocusCallback)} to start the focus in this mode.
          */
         public static final String FOCUS_MODE_AUTO = "auto";
 
@@ -1008,6 +1177,12 @@ public class Camera {
          * {@link #autoFocus(AutoFocusCallback)} in this mode.
          */
         public static final String FOCUS_MODE_INFINITY = "infinity";
+
+        /**
+         * Macro (close-up) focus mode. Applications should call
+         * {@link #autoFocus(AutoFocusCallback)} to start the focus in this
+         * mode.
+         */
         public static final String FOCUS_MODE_MACRO = "macro";
 
         /**
@@ -1024,6 +1199,52 @@ public class Camera {
          * #autoFocus(AutoFocusCallback)} in this mode.
          */
         public static final String FOCUS_MODE_EDOF = "edof";
+
+        /**
+         * Continuous auto focus mode intended for video recording. The camera
+         * continuously tries to focus. This is ideal for shooting video.
+         * Applications still can call {@link
+         * #takePicture(Camera.ShutterCallback, Camera.PictureCallback,
+         * Camera.PictureCallback)} in this mode but the subject may not be in
+         * focus. Auto focus starts when the parameter is set. Applications
+         * should not call {@link #autoFocus(AutoFocusCallback)} in this mode.
+         * To stop continuous focus, applications should change the focus mode
+         * to other modes.
+         */
+        public static final String FOCUS_MODE_CONTINUOUS_VIDEO = "continuous-video";
+
+        // Indices for focus distance array.
+        /**
+         * The array index of near focus distance for use with
+         * {@link #getFocusDistances(float[])}.
+         */
+        public static final int FOCUS_DISTANCE_NEAR_INDEX = 0;
+
+        /**
+         * The array index of optimal focus distance for use with
+         * {@link #getFocusDistances(float[])}.
+         */
+        public static final int FOCUS_DISTANCE_OPTIMAL_INDEX = 1;
+
+        /**
+         * The array index of far focus distance for use with
+         * {@link #getFocusDistances(float[])}.
+         */
+        public static final int FOCUS_DISTANCE_FAR_INDEX = 2;
+
+        /**
+         * The array index of minimum preview fps for use with {@link
+         * #getPreviewFpsRange(int[])} or {@link
+         * #getSupportedPreviewFpsRange()}.
+         */
+        public static final int PREVIEW_FPS_MIN_INDEX = 0;
+
+        /**
+         * The array index of maximum preview fps for use with {@link
+         * #getPreviewFpsRange(int[])} or {@link
+         * #getSupportedPreviewFpsRange()}.
+         */
+        public static final int PREVIEW_FPS_MAX_INDEX = 1;
 
         // Formats for setPreviewFormat and setPictureFormat.
         private static final String PIXEL_FORMAT_YUV422SP = "yuv422sp";
@@ -1151,8 +1372,23 @@ public class Camera {
         /**
          * Sets the dimensions for preview pictures.
          *
+         * The sides of width and height are based on camera orientation. That
+         * is, the preview size is the size before it is rotated by display
+         * orientation. So applications need to consider the display orientation
+         * while setting preview size. For example, suppose the camera supports
+         * both 480x320 and 320x480 preview sizes. The application wants a 3:2
+         * preview ratio. If the display orientation is set to 0 or 180, preview
+         * size should be set to 480x320. If the display orientation is set to
+         * 90 or 270, preview size should be set to 320x480. The display
+         * orientation should also be considered while setting picture size and
+         * thumbnail size.
+         *
          * @param width  the width of the pictures, in pixels
          * @param height the height of the pictures, in pixels
+         * @see #setDisplayOrientation(int)
+         * @see #getCameraInfo(int, CameraInfo)
+         * @see #setPictureSize(int, int)
+         * @see #setJpegThumbnailSize(int, int)
          */
         public void setPreviewSize(int width, int height) {
             String v = Integer.toString(width) + "x" + Integer.toString(height);
@@ -1186,8 +1422,12 @@ public class Camera {
          * applications set both width and height to 0, EXIF will not contain
          * thumbnail.
          *
+         * Applications need to consider the display orientation. See {@link
+         * #setPreviewSize(int,int)} for reference.
+         *
          * @param width  the width of the thumbnail, in pixels
          * @param height the height of the thumbnail, in pixels
+         * @see #setPreviewSize(int,int)
          */
         public void setJpegThumbnailSize(int width, int height) {
             set(KEY_JPEG_THUMBNAIL_WIDTH, width);
@@ -1260,7 +1500,9 @@ public class Camera {
          * target frame rate. The actual frame rate depends on the driver.
          *
          * @param fps the frame rate (frames per second)
+         * @deprecated replaced by {@link #setPreviewFpsRange(int,int)}
          */
+        @Deprecated
         public void setPreviewFrameRate(int fps) {
             set(KEY_PREVIEW_FRAME_RATE, fps);
         }
@@ -1271,7 +1513,9 @@ public class Camera {
          * depends on the driver.
          *
          * @return the frame rate setting (frames per second)
+         * @deprecated replaced by {@link #getPreviewFpsRange(int[])}
          */
+        @Deprecated
         public int getPreviewFrameRate() {
             return getInt(KEY_PREVIEW_FRAME_RATE);
         }
@@ -1281,10 +1525,67 @@ public class Camera {
          *
          * @return a list of supported preview frame rates. null if preview
          *         frame rate setting is not supported.
+         * @deprecated replaced by {@link #getSupportedPreviewFpsRange()}
          */
+        @Deprecated
         public List<Integer> getSupportedPreviewFrameRates() {
             String str = get(KEY_PREVIEW_FRAME_RATE + SUPPORTED_VALUES_SUFFIX);
             return splitInt(str);
+        }
+
+        /**
+         * Sets the maximum and maximum preview fps. This controls the rate of
+         * preview frames received in {@link PreviewCallback}. The minimum and
+         * maximum preview fps must be one of the elements from {@link
+         * #getSupportedPreviewFpsRange}.
+         *
+         * @param min the minimum preview fps (scaled by 1000).
+         * @param max the maximum preview fps (scaled by 1000).
+         * @throws RuntimeException if fps range is invalid.
+         * @see #setPreviewCallbackWithBuffer(Camera.PreviewCallback)
+         * @see #getSupportedPreviewFpsRange()
+         */
+        public void setPreviewFpsRange(int min, int max) {
+            set(KEY_PREVIEW_FPS_RANGE, "" + min + "," + max);
+        }
+
+        /**
+         * Returns the current minimum and maximum preview fps. The values are
+         * one of the elements returned by {@link #getSupportedPreviewFpsRange}.
+         *
+         * @return range the minimum and maximum preview fps (scaled by 1000).
+         * @see #PREVIEW_FPS_MIN_INDEX
+         * @see #PREVIEW_FPS_MAX_INDEX
+         * @see #getSupportedPreviewFpsRange()
+         */
+        public void getPreviewFpsRange(int[] range) {
+            if (range == null || range.length != 2) {
+                throw new IllegalArgumentException(
+                        "range must be an array with two elements.");
+            }
+            splitInt(get(KEY_PREVIEW_FPS_RANGE), range);
+        }
+
+        /**
+         * Gets the supported preview fps (frame-per-second) ranges. Each range
+         * contains a minimum fps and maximum fps. If minimum fps equals to
+         * maximum fps, the camera outputs frames in fixed frame rate. If not,
+         * the camera outputs frames in auto frame rate. The actual frame rate
+         * fluctuates between the minimum and the maximum. The values are
+         * multiplied by 1000 and represented in integers. For example, if frame
+         * rate is 26.623 frames per second, the value is 26623.
+         *
+         * @return a list of supported preview fps ranges. This method returns a
+         *         list with at least one element. Every element is an int array
+         *         of two values - minimum fps and maximum fps. The list is
+         *         sorted from small to large (first by maximum fps and then
+         *         minimum fps).
+         * @see #PREVIEW_FPS_MIN_INDEX
+         * @see #PREVIEW_FPS_MAX_INDEX
+         */
+        public List<int[]> getSupportedPreviewFpsRange() {
+            String str = get(KEY_PREVIEW_FPS_RANGE + SUPPORTED_VALUES_SUFFIX);
+            return splitRange(str);
         }
 
         /**
@@ -1342,8 +1643,13 @@ public class Camera {
         /**
          * Sets the dimensions for pictures.
          *
+         * Applications need to consider the display orientation. See {@link
+         * #setPreviewSize(int,int)} for reference.
+         *
          * @param width  the width for pictures, in pixels
          * @param height the height for pictures, in pixels
+         * @see #setPreviewSize(int,int)
+         *
          */
         public void setPictureSize(int width, int height) {
             String v = Integer.toString(width) + "x" + Integer.toString(height);
@@ -1453,23 +1759,55 @@ public class Camera {
         }
 
         /**
-         * Sets the orientation of the device in degrees. For example, suppose
-         * the natural position of the device is landscape. If the user takes a
-         * picture in landscape mode in 2048x1536 resolution, the rotation
-         * should be set to 0. If the user rotates the phone 90 degrees
-         * clockwise, the rotation should be set to 90. Applications can use
-         * {@link android.view.OrientationEventListener} to set this parameter.
+         * Sets the rotation angle in degrees relative to the orientation of
+         * the camera. This affects the pictures returned from JPEG {@link
+         * PictureCallback}. The camera driver may set orientation in the
+         * EXIF header without rotating the picture. Or the driver may rotate
+         * the picture and the EXIF thumbnail. If the Jpeg picture is rotated,
+         * the orientation in the EXIF header will be missing or 1 (row #0 is
+         * top and column #0 is left side).
          *
-         * The camera driver may set orientation in the EXIF header without
-         * rotating the picture. Or the driver may rotate the picture and
-         * the EXIF thumbnail. If the Jpeg picture is rotated, the orientation
-         * in the EXIF header will be missing or 1 (row #0 is top and column #0
-         * is left side).
+         * If applications want to rotate the picture to match the orientation
+         * of what users see, apps should use {@link
+         * android.view.OrientationEventListener} and {@link CameraInfo}.
+         * The value from OrientationEventListener is relative to the natural
+         * orientation of the device. CameraInfo.orientation is the angle
+         * between camera orientation and natural device orientation. The sum or
+         * of the two is the rotation angle for back-facing camera. The
+         * difference of the two is the rotation angle for front-facing camera.
+         * Note that the JPEG pictures of front-facing cameras are not mirrored
+         * as in preview display.
          *
-         * @param rotation The orientation of the device in degrees. Rotation
-         *                 can only be 0, 90, 180 or 270.
+         * For example, suppose the natural orientation of the device is
+         * portrait. The device is rotated 270 degrees clockwise, so the device
+         * orientation is 270. Suppose a back-facing camera sensor is mounted in
+         * landscape and the top side of the camera sensor is aligned with the
+         * right edge of the display in natural orientation. So the camera
+         * orientation is 90. The rotation should be set to 0 (270 + 90).
+         *
+         * The reference code is as follows.
+         *
+         * public void public void onOrientationChanged(int orientation) {
+         *     if (orientation == ORIENTATION_UNKNOWN) return;
+         *     android.hardware.Camera.CameraInfo info =
+         *            new android.hardware.Camera.CameraInfo();
+         *     android.hardware.Camera.getCameraInfo(cameraId, info);
+         *     orientation = (orientation + 45) / 90 * 90;
+         *     int rotation = 0;
+         *     if (info.facing == CameraInfo.CAMERA_FACING_FRONT) {
+         *         rotation = (info.orientation - orientation + 360) % 360;
+         *     } else {  // back-facing camera
+         *         rotation = (info.orientation + orientation) % 360;
+         *     }
+         *     mParameters.setRotation(rotation);
+         * }
+         *
+         * @param rotation The rotation angle in degrees relative to the
+         *                 orientation of the camera. Rotation can only be 0,
+         *                 90, 180 or 270.
          * @throws IllegalArgumentException if rotation value is invalid.
          * @see android.view.OrientationEventListener
+         * @see #getCameraInfo(int, CameraInfo)
          */
         public void setRotation(int rotation) {
             if (rotation == 0 || rotation == 90 || rotation == 180
@@ -1754,15 +2092,16 @@ public class Camera {
         /**
          * Gets the current focus mode setting.
          *
-         * @return current focus mode. If the camera does not support
-         *         auto-focus, this should return {@link #FOCUS_MODE_FIXED}. If
-         *         the focus mode is not FOCUS_MODE_FIXED or {@link
-         *         #FOCUS_MODE_INFINITY}, applications should call {@link
-         *         #autoFocus(AutoFocusCallback)} to start the focus.
+         * @return current focus mode. This method will always return a non-null
+         *         value. Applications should call {@link
+         *         #autoFocus(AutoFocusCallback)} to start the focus if focus
+         *         mode is FOCUS_MODE_AUTO or FOCUS_MODE_MACRO.
          * @see #FOCUS_MODE_AUTO
          * @see #FOCUS_MODE_INFINITY
          * @see #FOCUS_MODE_MACRO
          * @see #FOCUS_MODE_FIXED
+         * @see #FOCUS_MODE_EDOF
+         * @see #FOCUS_MODE_CONTINUOUS_VIDEO
          */
         public String getFocusMode() {
             return get(KEY_FOCUS_MODE);
@@ -1955,6 +2294,43 @@ public class Camera {
             return TRUE.equals(str);
         }
 
+        /**
+         * Gets the distances from the camera to where an object appears to be
+         * in focus. The object is sharpest at the optimal focus distance. The
+         * depth of field is the far focus distance minus near focus distance.
+         *
+         * Focus distances may change after calling {@link
+         * #autoFocus(AutoFocusCallback)}, {@link #cancelAutoFocus}, or {@link
+         * #startPreview()}. Applications can call {@link #getParameters()}
+         * and this method anytime to get the latest focus distances. If the
+         * focus mode is FOCUS_MODE_CONTINUOUS_VIDEO, focus distances may change
+         * from time to time.
+         *
+         * This method is intended to estimate the distance between the camera
+         * and the subject. After autofocus, the subject distance may be within
+         * near and far focus distance. However, the precision depends on the
+         * camera hardware, autofocus algorithm, the focus area, and the scene.
+         * The error can be large and it should be only used as a reference.
+         *
+         * Far focus distance >= optimal focus distance >= near focus distance.
+         * If the focus distance is infinity, the value will be
+         * Float.POSITIVE_INFINITY.
+         *
+         * @param output focus distances in meters. output must be a float
+         *        array with three elements. Near focus distance, optimal focus
+         *        distance, and far focus distance will be filled in the array.
+         * @see #FOCUS_DISTANCE_NEAR_INDEX
+         * @see #FOCUS_DISTANCE_OPTIMAL_INDEX
+         * @see #FOCUS_DISTANCE_FAR_INDEX
+         */
+        public void getFocusDistances(float[] output) {
+            if (output == null || output.length != 3) {
+                throw new IllegalArgumentException(
+                        "output must be an float array with three elements.");
+            }
+            splitFloat(get(KEY_FOCUS_DISTANCES), output);
+        }
+
         // Splits a comma delimited string to an ArrayList of String.
         // Return null if the passing string is null or the size is 0.
         private ArrayList<String> split(String str) {
@@ -1982,6 +2358,29 @@ public class Camera {
             }
             if (substrings.size() == 0) return null;
             return substrings;
+        }
+
+        private void splitInt(String str, int[] output) {
+            if (str == null) return;
+
+            StringTokenizer tokenizer = new StringTokenizer(str, ",");
+            int index = 0;
+            while (tokenizer.hasMoreElements()) {
+                String token = tokenizer.nextToken();
+                output[index++] = Integer.parseInt(token);
+            }
+        }
+
+        // Splits a comma delimited string to an ArrayList of Float.
+        private void splitFloat(String str, float[] output) {
+            if (str == null) return;
+
+            StringTokenizer tokenizer = new StringTokenizer(str, ",");
+            int index = 0;
+            while (tokenizer.hasMoreElements()) {
+                String token = tokenizer.nextToken();
+                output[index++] = Float.parseFloat(token);
+            }
         }
 
         // Returns the value of a float parameter.
@@ -2031,6 +2430,31 @@ public class Camera {
             }
             Log.e(TAG, "Invalid size parameter string=" + str);
             return null;
+        }
+
+        // Splits a comma delimited string to an ArrayList of int array.
+        // Example string: "(10000,26623),(10000,30000)". Return null if the
+        // passing string is null or the size is 0.
+        private ArrayList<int[]> splitRange(String str) {
+            if (str == null || str.charAt(0) != '('
+                    || str.charAt(str.length() - 1) != ')') {
+                Log.e(TAG, "Invalid range list string=" + str);
+                return null;
+            }
+
+            ArrayList<int[]> rangeList = new ArrayList<int[]>();
+            int endIndex, fromIndex = 1;
+            do {
+                int[] range = new int[2];
+                endIndex = str.indexOf("),(", fromIndex);
+                if (endIndex == -1) endIndex = str.length() - 1;
+                splitInt(str.substring(fromIndex, endIndex), range);
+                rangeList.add(range);
+                fromIndex = endIndex + 3;
+            } while (endIndex != str.length() - 1);
+
+            if (rangeList.size() == 0) return null;
+            return rangeList;
         }
     };
 }

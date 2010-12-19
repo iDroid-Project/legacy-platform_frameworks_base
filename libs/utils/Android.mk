@@ -26,11 +26,14 @@ commonSources:= \
 	Debug.cpp \
 	FileMap.cpp \
 	Flattenable.cpp \
+	ObbFile.cpp \
+	Pool.cpp \
 	RefBase.cpp \
 	ResourceTypes.cpp \
 	SharedBuffer.cpp \
 	Static.cpp \
 	StopWatch.cpp \
+	StreamingZipInflater.cpp \
 	String8.cpp \
 	String16.cpp \
 	StringArray.cpp \
@@ -39,7 +42,7 @@ commonSources:= \
 	Threads.cpp \
 	Timers.cpp \
 	VectorImpl.cpp \
-    ZipFileCRO.cpp \
+	ZipFileCRO.cpp \
 	ZipFileRO.cpp \
 	ZipUtils.cpp \
 	misc.cpp
@@ -64,6 +67,11 @@ LOCAL_CFLAGS += -DMB_CUR_MAX=1
 endif
 endif
 
+ifeq ($(HOST_OS),darwin)
+# MacOS doesn't have lseek64. However, off_t is 64-bit anyway.
+LOCAL_CFLAGS += -DOFF_T_IS_64_BIT
+endif
+
 include $(BUILD_HOST_STATIC_LIBRARY)
 
 
@@ -76,8 +84,9 @@ include $(CLEAR_VARS)
 # we have the common sources, plus some device-specific stuff
 LOCAL_SRC_FILES:= \
 	$(commonSources) \
-    BackupData.cpp \
-	BackupHelpers.cpp
+	BackupData.cpp \
+	BackupHelpers.cpp \
+	Looper.cpp
 
 ifeq ($(TARGET_OS),linux)
 LOCAL_LDLIBS += -lrt -ldl
@@ -113,4 +122,14 @@ LOCAL_MODULE := libutils
 LOCAL_SRC_FILES := $(commonSources) BackupData.cpp BackupHelpers.cpp
 include $(BUILD_STATIC_LIBRARY)
 endif
+endif
+
+
+# Include subdirectory makefiles
+# ============================================================
+
+# If we're building with ONE_SHOT_MAKEFILE (mm, mmm), then what the framework
+# team really wants is to build the stuff defined by this makefile.
+ifeq (,$(ONE_SHOT_MAKEFILE))
+include $(call first-makefiles-under,$(LOCAL_PATH))
 endif

@@ -190,7 +190,9 @@ public:
      */
     virtual status_t    cancelPicture() = 0;
 
-    /** Set the camera parameters. */
+    /**
+     * Set the camera parameters. This returns BAD_VALUE if any parameter is
+     * invalid or not supported. */
     virtual status_t    setParameters(const CameraParameters& params) = 0;
 
     /** Return the camera parameters. */
@@ -213,8 +215,16 @@ public:
     virtual status_t dump(int fd, const Vector<String16>& args) const = 0;
 };
 
-/** factory function to instantiate a camera hardware object */
-extern "C" sp<CameraHardwareInterface> openCameraHardware();
+/**
+ * The functions need to be provided by the camera HAL.
+ *
+ * If getNumberOfCameras() returns N, the valid cameraId for getCameraInfo()
+ * and openCameraHardware() is 0 to N-1.
+ */
+extern "C" int HAL_getNumberOfCameras();
+extern "C" void HAL_getCameraInfo(int cameraId, struct CameraInfo* cameraInfo);
+/* HAL should return NULL if it fails to open camera hardware. */
+extern "C" sp<CameraHardwareInterface> HAL_openCameraHardware(int cameraId);
 
 };  // namespace android
 

@@ -83,6 +83,18 @@ enum {
 enum {
     CAMERA_CMD_START_SMOOTH_ZOOM     = 1,
     CAMERA_CMD_STOP_SMOOTH_ZOOM      = 2,
+    // Set the clockwise rotation of preview display (setPreviewDisplay) in
+    // degrees. This affects the preview frames and the picture displayed after
+    // snapshot. This method is useful for portrait mode applications. Note that
+    // preview display of front-facing cameras is flipped horizontally before
+    // the rotation, that is, the image is reflected along the central vertical
+    // axis of the camera sensor. So the users can see themselves as looking
+    // into a mirror.
+    //
+    // This does not affect the order of byte array of CAMERA_MSG_PREVIEW_FRAME,
+    // CAMERA_MSG_VIDEO_FRAME, CAMERA_MSG_POSTVIEW_FRAME, CAMERA_MSG_RAW_IMAGE,
+    // or CAMERA_MSG_COMPRESSED_IMAGE. This is not allowed to be set during
+    // preview.
     CAMERA_CMD_SET_DISPLAY_ORIENTATION = 3,
 };
 
@@ -90,6 +102,34 @@ enum {
 enum {
     CAMERA_ERROR_UKNOWN  = 1,
     CAMERA_ERROR_SERVER_DIED = 100
+};
+
+enum {
+    CAMERA_FACING_BACK = 0, /* The facing of the camera is opposite to that of the screen. */
+    CAMERA_FACING_FRONT = 1 /* The facing of the camera is the same as that of the screen. */
+};
+
+struct CameraInfo {
+
+    /**
+     * The direction that the camera faces to. It should be
+     * CAMERA_FACING_BACK or CAMERA_FACING_FRONT.
+     */
+    int facing;
+
+    /**
+     * The orientation of the camera image. The value is the angle that the
+     * camera image needs to be rotated clockwise so it shows correctly on
+     * the display in its natural orientation. It should be 0, 90, 180, or 270.
+     *
+     * For example, suppose a device has a naturally tall screen. The
+     * back-facing camera sensor is mounted in landscape. You are looking at
+     * the screen. If the top side of the camera sensor is aligned with the
+     * right edge of the screen in natural orientation, the value should be
+     * 90. If the top side of a front-facing camera sensor is aligned with
+     * the right of the screen, the value should be 270.
+     */
+    int orientation;
 };
 
 class ICameraService;
@@ -112,7 +152,10 @@ class Camera : public BnCameraClient, public IBinder::DeathRecipient
 public:
             // construct a camera client from an existing remote
     static  sp<Camera>  create(const sp<ICamera>& camera);
-    static  sp<Camera>  connect();
+    static  int32_t     getNumberOfCameras();
+    static  status_t    getCameraInfo(int cameraId,
+                                      struct CameraInfo* cameraInfo);
+    static  sp<Camera>  connect(int cameraId);
                         ~Camera();
             void        init();
 
