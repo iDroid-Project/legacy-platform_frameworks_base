@@ -5429,51 +5429,8 @@ public class WindowManagerService extends IWindowManager.Stub
         if (eventTime == 0) eventTime = SystemClock.uptimeMillis();
         if (downTime == 0) downTime = eventTime;
 
-		RawInputEvent rie = new RawInputEvent();
-		rie.type = RawInputEvent.EV_KEY;
-		rie.when = eventTime;
-		rie.scancode = scancode;
-		rie.keycode = code;
-		rie.flags = 0;
-		rie.value = (action == KeyEvent.ACTION_DOWN)? 1 : 0;
-
         KeyEvent newEvent = new KeyEvent(downTime, eventTime, action, code, repeatCount, metaState,
                 deviceId, scancode, KeyEvent.FLAG_FROM_SYSTEM, source);
-
-		// XXX: Begin cool hack. -- Ricky26
-		// This code means you can inject ENDCALL, which is
-		// damn useful for soft-keys.
-        if (mPolicy.preprocessInputEventTq(rie))
-			return true;
-
-		boolean screenIsOff = !mPowerManager.isScreenOn();
-		boolean screenIsDim = !mPowerManager.isScreenBright();
-		int actions = mPolicy.interceptKeyTq(rie, !screenIsOff);
-
-		if ((actions & WindowManagerPolicy.ACTION_GO_TO_SLEEP) != 0) {
-			mPowerManager.goToSleep(eventTime);
-		}
-
-		if (screenIsOff) {
-			rie.flags |= WindowManagerPolicy.FLAG_WOKE_HERE;
-		}
-		if (screenIsDim) {
-			rie.flags |= WindowManagerPolicy.FLAG_BRIGHT_HERE;
-		}
-		if ((actions & WindowManagerPolicy.ACTION_POKE_USER_ACTIVITY) != 0) {
-			mPowerManager.userActivity(eventTime, false,
-					LocalPowerManager.BUTTON_EVENT, false);
-		}
-
-		if ((actions & WindowManagerPolicy.ACTION_PASS_TO_USER) != 0) {
-			if (rie.value != 0 && mPolicy.isAppSwitchKeyTqTiLwLi(code)) {
-				mKeyWaiter.appSwitchComing();
-			}
-		}
-		else
-			return false;
-
-		// XXX: End cool hack. -- Ricky26
 
         final int pid = Binder.getCallingPid();
         final int uid = Binder.getCallingUid();
