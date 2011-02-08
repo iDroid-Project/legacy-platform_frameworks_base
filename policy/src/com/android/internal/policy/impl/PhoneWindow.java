@@ -1274,18 +1274,14 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
                 }
                 break;
             }
-		
-		// Begin Ddominator's Keyboard hack for iDroid Status Bar. We have no use for KEYCODE_BUTTON_MODE. We are not a Playstation Phone!
-			case KeyEvent.KEYCODE_BUTTON_MODE: {	
-				InputMethodManager imm = (InputMethodManager)
-				getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-				if (imm != null) {
-					imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);					
-				}
-				return true;
-			}
-		// End Ddominator's Keyboard Hack				
-			
+	    // We have no use for KEYCODE_BUTTON_MODE. We are not a Playstation Phone!
+	    case KeyEvent.KEYCODE_BUTTON_MODE: {	
+		InputMethodManager imm = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+		if (imm != null) {
+			imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);					
+		}
+		return true;
+	    }
         }
 
         return false;

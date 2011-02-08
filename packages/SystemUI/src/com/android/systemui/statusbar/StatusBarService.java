@@ -87,8 +87,7 @@ public class StatusBarService extends Service implements CommandQueue.Callbacks 
     static final boolean SPEW_ICONS = false;
     static final boolean SPEW = false;
 
-    public static final String ACTION_STATUSBAR_START
-            = "com.android.internal.policy.statusbar.START";
+    public static final String ACTION_STATUSBAR_START = "com.android.internal.policy.statusbar.START";
 
     static final int EXPANDED_LEAVE_ALONE = -10000;
     static final int EXPANDED_FULL_OPEN = -10001;
@@ -96,14 +95,14 @@ public class StatusBarService extends Service implements CommandQueue.Callbacks 
     private static final int MSG_ANIMATE = 1000;
     private static final int MSG_ANIMATE_REVEAL = 1001;
 
-	private int mKey = KeyEvent.KEYCODE_BACK;
+    private int mKey = KeyEvent.KEYCODE_BACK;
 	
     StatusBarPolicy mIconPolicy;
 
     CommandQueue mCommandQueue;
     IStatusBarService mBarService;
 
-	private final Handler miDroid = new Handler();
+    private final Handler miDroid = new Handler();
 	
     int mIconSize;
     Display mDisplay;
@@ -261,65 +260,64 @@ public class StatusBarService extends Service implements CommandQueue.Callbacks 
     /* SOFT BUTTONS */
     private void setupSoftButtons()
     {
-		LinearLayout homeButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_1);
-		LinearLayout backButton = (LinearLayout) mStatusBarView.findViewById(R.id.bar_idroid_btn_back);
-		LinearLayout menuButton = (LinearLayout) mStatusBarView.findViewById(R.id.bar_idroid_btn_menu);
+	LinearLayout homeButton = (LinearLayout) mExpandedView.findViewById(R.id.exp_idroid_btn_1);
+	LinearLayout backButton = (LinearLayout) mStatusBarView.findViewById(R.id.bar_idroid_btn_back);
+	LinearLayout menuButton = (LinearLayout) mStatusBarView.findViewById(R.id.bar_idroid_btn_menu);
 		
-		homeButton.setOnClickListener(idroidButtonListener);
-		backButton.setOnClickListener(idroidButtonListener);
-		menuButton.setOnClickListener(idroidButtonListener);
-		menuButton.setOnLongClickListener(new View.OnLongClickListener() {
-			public boolean onLongClick(View v) {
-				runKey(KeyEvent.KEYCODE_BUTTON_MODE);
-				return true;
-			}
-		});
-	}
+	homeButton.setOnClickListener(idroidButtonListener);
+	backButton.setOnClickListener(idroidButtonListener);
+	menuButton.setOnClickListener(idroidButtonListener);
+	menuButton.setOnLongClickListener(new View.OnLongClickListener() {
+		public boolean onLongClick(View v) {
+			runKey(KeyEvent.KEYCODE_BUTTON_MODE);
+			return true;
+		}
+	});
+    }
 		
     private View.OnClickListener idroidButtonListener = new View.OnClickListener() {
-		public void onClick(View v) {
-			animateCollapse();
-			int viewId = v.getId();
-			switch(viewId) {
-				case R.id.exp_idroid_btn_1:
-					runKey(KeyEvent.KEYCODE_HOME);
-					break;
-				case R.id.bar_idroid_btn_back:
-					runKey(KeyEvent.KEYCODE_BACK);
-					break;
-				case R.id.bar_idroid_btn_menu:
-					runKey(KeyEvent.KEYCODE_MENU);
-					break;
-				default:
-					runKey(KeyEvent.KEYCODE_BACK);
-					break;
-			}
-			return;
+	public void onClick(View v) {
+		animateCollapse();
+		int viewId = v.getId();
+		switch(viewId) {
+			case R.id.exp_idroid_btn_1:
+				runKey(KeyEvent.KEYCODE_HOME);
+				break;
+			case R.id.bar_idroid_btn_back:
+				runKey(KeyEvent.KEYCODE_BACK);
+				break;
+			case R.id.bar_idroid_btn_menu:
+				runKey(KeyEvent.KEYCODE_MENU);
+				break;
+			default:
+				runKey(KeyEvent.KEYCODE_BACK);
+				break;
 		}
-	};
-
-	private void runKey(int key) {	
-		mKey = key;
-		miDroid.post(new Runnable() {
-			public void run() {
-				press(mKey);
-			}
-		});
+		return;
 	}
+    };
 
-	public void press(int key) {
-		sendKey(new KeyEvent(KeyEvent.ACTION_DOWN, key));
-		sendKey(new KeyEvent(KeyEvent.ACTION_UP, key));
-	}
-
-	public void sendKey(KeyEvent event) {
-		try {
-			IWindowManager.Stub.asInterface(ServiceManager.getService("window"))
-				.injectKeyEvent(event, false);
-			} catch (RemoteException e) {
-				Log.e("StatusBar", "sendKey exception " + e);
+    private void runKey(int key) {	
+	mKey = key;
+	miDroid.post(new Runnable() {
+		public void run() {
+			press(mKey);
 		}
+	});
+    }
+
+    public void press(int key) {
+	sendKey(new KeyEvent(KeyEvent.ACTION_DOWN, key));
+	sendKey(new KeyEvent(KeyEvent.ACTION_UP, key));
+    }
+
+    public void sendKey(KeyEvent event) {
+	try {
+		IWindowManager.Stub.asInterface(ServiceManager.getService("window")).injectKeyEvent(event, false);
+	} catch (RemoteException e) {
+		Log.e("StatusBar", "sendKey exception " + e);
 	}
+    }
 /* END SOFT BUTTONS */
 
     // ================================================================================
@@ -408,7 +406,7 @@ public class StatusBarService extends Service implements CommandQueue.Callbacks 
         lp.setTitle("StatusBar");
         lp.windowAnimations = com.android.internal.R.style.Animation_StatusBar;
         WindowManagerImpl.getDefault().addView(view, lp);
-		this.setupSoftButtons();
+	this.setupSoftButtons();
     }
 
     public void addIcon(String slot, int index, int viewIndex, StatusBarIcon icon) {
@@ -1031,8 +1029,11 @@ public class StatusBarService extends Service implements CommandQueue.Callbacks 
                 // that rotates (like g1 and droid)
                 int x = (int)event.getRawX();
                 final int edgeBorder = mEdgeBorder;
-// original		if (x >= edgeBorder && x < mDisplay.getWidth() - edgeBorder) {
-                if (x > edgeBorder + 70 && x < mDisplay.getWidth() - edgeBorder) {
+	/*
+	 * originally: if (x >= edgeBorder && x < mDisplay.getWidth() - edgeBorder) {
+         * nickp666: We need to compute the value here rather than hard coding it, otherwise when we have higher resolution devices, I suspect this will bite us in the arse
+	 */       
+		if (x > edgeBorder + 70 && x < mDisplay.getWidth() - edgeBorder) {
                     prepareTracking(y, !mExpanded);// opening if we're not already fully visible
                     mVelocityTracker.addMovement(event);
                 }
