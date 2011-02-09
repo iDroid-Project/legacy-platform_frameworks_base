@@ -1029,11 +1029,9 @@ public class StatusBarService extends Service implements CommandQueue.Callbacks 
                 // that rotates (like g1 and droid)
                 int x = (int)event.getRawX();
                 final int edgeBorder = mEdgeBorder;
-	/*
-	 * originally: if (x >= edgeBorder && x < mDisplay.getWidth() - edgeBorder) {
-         * nickp666: We need to compute the value here rather than hard coding it, otherwise when we have higher resolution devices, I suspect this will bite us in the arse
-	 */       
-		if (x > edgeBorder + 70 && x < mDisplay.getWidth() - edgeBorder) {
+		LinearLayout idroidBar = (LinearLayout) mStatusBarView.findViewById(R.id.bar_idroid_btn);
+		int buttonSpace = idroidBar.getMeasuredWidth();
+		if (x > edgeBorder + buttonSpace && x < mDisplay.getWidth() - edgeBorder) {
                     prepareTracking(y, !mExpanded);// opening if we're not already fully visible
                     mVelocityTracker.addMovement(event);
                 }
