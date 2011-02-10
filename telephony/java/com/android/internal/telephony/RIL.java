@@ -141,6 +141,7 @@ class RILRequest {
                 this.mNext = sPool;
                 sPool = this;
                 sPoolSize++;
+                mResult = null;
             }
         }
     }
@@ -359,6 +360,11 @@ public final class RIL extends BaseCommands implements CommandsInterface {
                             rr.onError(GENERIC_FAILURE, null);
                             rr.release();
                         }
+                    } finally {
+                        // Note: We are "Done" only if there are no outstanding
+                        // requests or replies. Thus this code path will only release
+                        // the wake lock on errors.
+                        releaseWakeLockIfDone();
                     }
 
                     if (!alreadySubtracted) {
@@ -1961,26 +1967,30 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         sendScreenState(true);
    }
 
-    private void setRadioStateFromRILInt(int state) {
-        RadioState newState;
+    private RadioState getRadioStateFromInt(int stateInt) {
+        RadioState state;
 
         /* RIL_RadioState ril.h */
-        switch(state) {
-            case 0: newState = RadioState.RADIO_OFF; break;
-            case 1: newState = RadioState.RADIO_UNAVAILABLE; break;
-            case 2: newState = RadioState.SIM_NOT_READY; break;
-            case 3: newState = RadioState.SIM_LOCKED_OR_ABSENT; break;
-            case 4: newState = RadioState.SIM_READY; break;
-            case 5: newState = RadioState.RUIM_NOT_READY; break;
-            case 6: newState = RadioState.RUIM_READY; break;
-            case 7: newState = RadioState.RUIM_LOCKED_OR_ABSENT; break;
-            case 8: newState = RadioState.NV_NOT_READY; break;
-            case 9: newState = RadioState.NV_READY; break;
+        switch(stateInt) {
+            case 0: state = RadioState.RADIO_OFF; break;
+            case 1: state = RadioState.RADIO_UNAVAILABLE; break;
+            case 2: state = RadioState.SIM_NOT_READY; break;
+            case 3: state = RadioState.SIM_LOCKED_OR_ABSENT; break;
+            case 4: state = RadioState.SIM_READY; break;
+            case 5: state = RadioState.RUIM_NOT_READY; break;
+            case 6: state = RadioState.RUIM_READY; break;
+            case 7: state = RadioState.RUIM_LOCKED_OR_ABSENT; break;
+            case 8: state = RadioState.NV_NOT_READY; break;
+            case 9: state = RadioState.NV_READY; break;
 
             default:
                 throw new RuntimeException(
-                            "Unrecognized RIL_RadioState: " +state);
+                            "Unrecognized RIL_RadioState: " + stateInt);
         }
+        return state;
+    }
+
+    private void switchToRadioState(RadioState newState) {
 
         if (mInitialRadioStateChange) {
             if (newState.isOn()) {
@@ -2038,6 +2048,12 @@ public final class RIL extends BaseCommands implements CommandsInterface {
     private void
     send(RILRequest rr) {
         Message msg;
+
+        if (mSocket == null) {
+            rr.onError(RADIO_NOT_AVAILABLE, null);
+            rr.release();
+            return;
+        }
 
         msg = mSender.obtainMessage(EVENT_SEND, rr);
 
@@ -2339,7 +2355,7 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_RESTRICTED_STATE_CHANGED: ret = responseInts(p); break;
             case RIL_UNSOL_RESPONSE_SIM_STATUS_CHANGED:  ret =  responseVoid(p); break;
             case RIL_UNSOL_RESPONSE_CDMA_NEW_SMS:  ret =  responseCdmaSms(p); break;
-            case RIL_UNSOL_RESPONSE_NEW_BROADCAST_SMS:  ret =  responseString(p); break;
+            case RIL_UNSOL_RESPONSE_NEW_BROADCAST_SMS:  ret =  responseRaw(p); break;
             case RIL_UNSOL_CDMA_RUIM_SMS_STORAGE_FULL:  ret =  responseVoid(p); break;
             case RIL_UNSOL_ENTER_EMERGENCY_CALLBACK_MODE: ret = responseVoid(p); break;
             case RIL_UNSOL_CDMA_CALL_WAITING: ret = responseCdmaCallWaiting(p); break;
@@ -2361,9 +2377,10 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         switch(response) {
             case RIL_UNSOL_RESPONSE_RADIO_STATE_CHANGED:
                 /* has bonus radio state int */
-                setRadioStateFromRILInt(p.readInt());
+                RadioState newState = getRadioStateFromInt(p.readInt());
+                if (RILJ_LOGD) unsljLogMore(response, newState.toString());
 
-                if (RILJ_LOGD) unsljLogMore(response, mState.toString());
+                switchToRadioState(newState);
             break;
             case RIL_UNSOL_RESPONSE_CALL_STATE_CHANGED:
                 if (RILJ_LOGD) unsljLog(response);
@@ -2481,8 +2498,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_STK_SESSION_END:
                 if (RILJ_LOGD) unsljLog(response);
 
-                if (mStkSessionEndRegistrant != null) {
-                    mStkSessionEndRegistrant.notifyRegistrant(
+                if (mCatSessionEndRegistrant != null) {
+                    mCatSessionEndRegistrant.notifyRegistrant(
                                         new AsyncResult (null, ret, null));
                 }
                 break;
@@ -2490,8 +2507,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_STK_PROACTIVE_COMMAND:
                 if (RILJ_LOGD) unsljLogRet(response, ret);
 
-                if (mStkProCmdRegistrant != null) {
-                    mStkProCmdRegistrant.notifyRegistrant(
+                if (mCatProCmdRegistrant != null) {
+                    mCatProCmdRegistrant.notifyRegistrant(
                                         new AsyncResult (null, ret, null));
                 }
                 break;
@@ -2499,8 +2516,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_STK_EVENT_NOTIFY:
                 if (RILJ_LOGD) unsljLogRet(response, ret);
 
-                if (mStkEventRegistrant != null) {
-                    mStkEventRegistrant.notifyRegistrant(
+                if (mCatEventRegistrant != null) {
+                    mCatEventRegistrant.notifyRegistrant(
                                         new AsyncResult (null, ret, null));
                 }
                 break;
@@ -2508,8 +2525,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
             case RIL_UNSOL_STK_CALL_SETUP:
                 if (RILJ_LOGD) unsljLogRet(response, ret);
 
-                if (mStkCallSetUpRegistrant != null) {
-                    mStkCallSetUpRegistrant.notifyRegistrant(
+                if (mCatCallSetUpRegistrant != null) {
+                    mCatCallSetUpRegistrant.notifyRegistrant(
                                         new AsyncResult (null, ret, null));
                 }
                 break;
@@ -3406,6 +3423,8 @@ public final class RIL extends BaseCommands implements CommandsInterface {
         RILRequest rr = RILRequest.obtain(
                 RILConstants.RIL_REQUEST_QUERY_TTY_MODE, response);
 
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest));
+
         send(rr);
     }
 
@@ -3418,6 +3437,9 @@ public final class RIL extends BaseCommands implements CommandsInterface {
 
         rr.mp.writeInt(1);
         rr.mp.writeInt(ttyMode);
+
+        if (RILJ_LOGD) riljLog(rr.serialString() + "> " + requestToString(rr.mRequest)
+                + " : " + ttyMode);
 
         send(rr);
     }

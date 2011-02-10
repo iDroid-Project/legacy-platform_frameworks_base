@@ -71,7 +71,8 @@ public final class ShutdownThread extends Thread {
     private boolean mActionDone;
     private Context mContext;
     private PowerManager mPowerManager;
-    private PowerManager.WakeLock mWakeLock;
+    private PowerManager.WakeLock mCpuWakeLock;
+    private PowerManager.WakeLock mScreenWakeLock;
     private Handler mHandler;
     
     private ShutdownThread() {
@@ -138,7 +139,7 @@ public final class ShutdownThread extends Thread {
     private static void beginShutdownSequence(Context context) {
         synchronized (sIsStartedGuard) {
             if (sIsStarted) {
-                Log.d(TAG, "Request to shutdown already running, returning.");
+                Log.d(TAG, "Shutdown sequence already running, returning.");
                 return;
             }
             sIsStarted = true;
@@ -159,20 +160,36 @@ public final class ShutdownThread extends Thread {
 
         pd.show();
 
-        // start the thread that initiates shutdown
         sInstance.mContext = context;
         sInstance.mPowerManager = (PowerManager)context.getSystemService(Context.POWER_SERVICE);
-        sInstance.mWakeLock = null;
+
+        // make sure we never fall asleep again
+        sInstance.mCpuWakeLock = null;
+        try {
+            sInstance.mCpuWakeLock = sInstance.mPowerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK, TAG + "-cpu");
+            sInstance.mCpuWakeLock.setReferenceCounted(false);
+            sInstance.mCpuWakeLock.acquire();
+        } catch (SecurityException e) {
+            Log.w(TAG, "No permission to acquire wake lock", e);
+            sInstance.mCpuWakeLock = null;
+        }
+
+        // also make sure the screen stays on for better user experience
+        sInstance.mScreenWakeLock = null;
         if (sInstance.mPowerManager.isScreenOn()) {
             try {
-                sInstance.mWakeLock = sInstance.mPowerManager.newWakeLock(
-                        PowerManager.FULL_WAKE_LOCK, "Shutdown");
-                sInstance.mWakeLock.acquire();
+                sInstance.mScreenWakeLock = sInstance.mPowerManager.newWakeLock(
+                        PowerManager.FULL_WAKE_LOCK, TAG + "-screen");
+                sInstance.mScreenWakeLock.setReferenceCounted(false);
+                sInstance.mScreenWakeLock.acquire();
             } catch (SecurityException e) {
                 Log.w(TAG, "No permission to acquire wake lock", e);
-                sInstance.mWakeLock = null;
+                sInstance.mScreenWakeLock = null;
             }
         }
+
+        // start the thread that initiates shutdown
         sInstance.mHandler = new Handler() {
         };
         sInstance.start();

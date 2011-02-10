@@ -113,6 +113,9 @@ public abstract class SMSDispatcher extends Handler {
     /** Radio is ON */
     static final protected int EVENT_RADIO_ON = 12;
 
+    /** New broadcast SMS */
+    static final protected int EVENT_NEW_BROADCAST_SMS = 13;
+
     protected Phone mPhone;
     protected Context mContext;
     protected ContentResolver mResolver;
@@ -392,6 +395,10 @@ public abstract class SMSDispatcher extends Handler {
                 mCm.reportSmsMemoryStatus(mStorageAvailable,
                         obtainMessage(EVENT_REPORT_MEMORY_STATUS_DONE));
             }
+            break;
+
+        case EVENT_NEW_BROADCAST_SMS:
+            handleBroadcastSms((AsyncResult)msg.obj);
             break;
         }
     }
@@ -1004,4 +1011,17 @@ public abstract class SMSDispatcher extends Handler {
             }
         }
     };
+
+    protected abstract void handleBroadcastSms(AsyncResult ar);
+
+    protected void dispatchBroadcastPdus(byte[][] pdus) {
+        Intent intent = new Intent("android.provider.telephony.SMS_CB_RECEIVED");
+        intent.putExtra("pdus", pdus);
+
+        if (Config.LOGD)
+            Log.d(TAG, "Dispatching " + pdus.length + " SMS CB pdus");
+
+        dispatch(intent, "android.permission.RECEIVE_SMS");
+    }
+
 }
