@@ -341,11 +341,9 @@ public final class Pm {
         if (nonLocalized != null) {
             return nonLocalized.toString();
         }
-        if (res != 0) {
-            Resources r = getResources(pii);
-            if (r != null) {
-                return r.getString(res);
-            }
+        Resources r = getResources(pii);
+        if (r != null) {
+            return r.getString(res);
         }
         return null;
     }

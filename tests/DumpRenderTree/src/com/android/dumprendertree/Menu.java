@@ -18,7 +18,6 @@ package com.android.dumprendertree;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 
 import java.io.BufferedOutputStream;
@@ -29,8 +28,7 @@ public class Menu extends FileList {
 
     private static final int MENU_START = 0x01;
     private static String LOGTAG = "MenuActivity";
-    static final String LAYOUT_TESTS_LIST_FILE =
-        Environment.getExternalStorageDirectory() + "/android/layout_tests_list.txt";
+    static final String LAYOUT_TESTS_LIST_FILE = "/sdcard/android/layout_tests_list.txt";
 
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);

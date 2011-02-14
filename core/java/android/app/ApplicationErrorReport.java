@@ -188,7 +188,7 @@ public class ApplicationErrorReport implements Parcelable {
     /**
      * Return activity in receiverPackage that handles ACTION_APP_ERROR.
      *
-     * @param pm PackageManager instance
+     * @param pm PackageManager isntance
      * @param errorPackage package which caused the error
      * @param receiverPackage candidate package to receive the error
      * @return activity component within receiverPackage which handles

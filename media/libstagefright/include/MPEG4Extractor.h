@@ -39,10 +39,6 @@ public:
 
     virtual sp<MetaData> getMetaData();
 
-    // for DRM
-    virtual void setDrmFlag(bool flag);
-    virtual char* getDrmTrackInfo(size_t trackID, int *len);
-
 protected:
     virtual ~MPEG4Extractor();
 
@@ -74,19 +70,6 @@ private:
             const void *esds_data, size_t esds_size);
 
     static status_t verifyTrack(Track *track);
-
-    struct SINF {
-        SINF *next;
-        uint16_t trackID;
-        uint8_t IPMPDescriptorID;
-        ssize_t len;
-        char *IPMPData;
-    };
-
-    SINF *mFirstSINF;
-
-    bool mIsDrm;
-    status_t parseDrmSINF(off_t *offset, off_t data_offset);
 
     status_t parseTrackHeader(off_t data_offset, off_t data_size);
 

@@ -22,7 +22,6 @@
 #include "include/MPEG2TSExtractor.h"
 #include "include/NuCachedSource2.h"
 #include "include/NuHTTPDataSource.h"
-#include "include/DRMExtractor.h"
 
 #include "matroska/MatroskaExtractor.h"
 
@@ -31,8 +30,6 @@
 #include <media/stagefright/FileSource.h>
 #include <media/stagefright/MediaErrors.h>
 #include <utils/String8.h>
-
-#include <cutils/properties.h>
 
 namespace android {
 
@@ -107,12 +104,6 @@ void DataSource::RegisterDefaultSniffers() {
     RegisterSniffer(SniffAMR);
     RegisterSniffer(SniffMPEG2TS);
     RegisterSniffer(SniffMP3);
-
-    char value[PROPERTY_VALUE_MAX];
-    if (property_get("drm.service.enabled", value, NULL)
-            && (!strcmp(value, "1") || !strcasecmp(value, "true"))) {
-        RegisterSniffer(SniffDRM);
-    }
 }
 
 // static

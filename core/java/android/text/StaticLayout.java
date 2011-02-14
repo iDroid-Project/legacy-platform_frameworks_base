@@ -313,9 +313,7 @@ extends Layout
                                                       class);
 
                 if (spanned == null) {
-                    final int actualNum = paint.getTextWidths(sub, i, next, widths);
-                    if (next - i > actualNum)
-                        adjustTextWidths(widths, sub, i, next, actualNum);
+                    paint.getTextWidths(sub, i, next, widths);
                     System.arraycopy(widths, 0, widths,
                                      end - start + (i - start), next - i);
                                      
@@ -323,11 +321,9 @@ extends Layout
                 } else {
                     mWorkPaint.baselineShift = 0;
 
-                    final int actualNum = Styled.getTextWidths(paint, mWorkPaint,
-                            spanned, i, next,
-                            widths, fm);
-                    if (next - i > actualNum)
-                        adjustTextWidths(widths, spanned, i, next, actualNum);
+                    Styled.getTextWidths(paint, mWorkPaint,
+                                         spanned, i, next,
+                                         widths, fm);
                     System.arraycopy(widths, 0, widths,
                                      end - start + (i - start), next - i);
 
@@ -968,22 +964,6 @@ extends Layout
             return start;
         else
             return low;
-    }
-
-    private static void adjustTextWidths(float[] widths, CharSequence text,
-                              int curPos, int nextPos, int actualNum) {
-        try {
-            int dstIndex = nextPos - curPos - 1;
-            for (int srcIndex = actualNum - 1; srcIndex >= 0; srcIndex--) {
-                final char c = text.charAt(dstIndex + curPos);
-                if (c >= 0xD800 && c <= 0xDFFF) {
-                    widths[dstIndex--] = 0.0f;
-                }
-                widths[dstIndex--] = widths[srcIndex];
-            }
-        } catch (IndexOutOfBoundsException e) {
-            Log.e("text", "adjust text widths failed");
-        }
     }
 
     private int out(CharSequence text, int start, int end,

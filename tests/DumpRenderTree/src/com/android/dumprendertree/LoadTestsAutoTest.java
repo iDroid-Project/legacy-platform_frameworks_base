@@ -22,7 +22,6 @@ import android.app.Instrumentation;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Debug;
-import android.os.Environment;
 import android.os.Process;
 import android.test.ActivityInstrumentationTestCase2;
 import android.util.Log;
@@ -36,8 +35,7 @@ import java.io.PrintStream;
 public class LoadTestsAutoTest extends ActivityInstrumentationTestCase2<TestShellActivity> {
 
     private final static String LOGTAG = "LoadTest";
-    private final static String LOAD_TEST_RESULT =
-        Environment.getExternalStorageDirectory() + "/load_test_result.txt";
+    private final static String LOAD_TEST_RESULT = "/sdcard/load_test_result.txt";
     private boolean mFinished;
     static final String LOAD_TEST_RUNNER_FILES[] = {
         "run_page_cycler.py"

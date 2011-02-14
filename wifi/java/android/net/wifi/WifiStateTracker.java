@@ -322,7 +322,6 @@ public class WifiStateTracker extends NetworkStateTracker {
     private static String LS = System.getProperty("line.separator");
 
     private static String[] sDnsPropNames;
-    private Runnable mReleaseWakeLockCallback;
 
     /**
      * Keep track of whether we last told the battery stats we had started.
@@ -1476,7 +1475,7 @@ public class WifiStateTracker extends NetworkStateTracker {
         int netId = -1;
         String[] lines = reply.split("\n");
         for (String line : lines) {
-            String[] prop = line.split(" *= *", 2);
+            String[] prop = line.split(" *= *");
             if (prop.length < 2)
                 continue;
             String name = prop[0];
@@ -2447,11 +2446,11 @@ public class WifiStateTracker extends NetworkStateTracker {
                         setBluetoothCoexistenceMode(
                                 WifiNative.BLUETOOTH_COEXISTENCE_MODE_DISABLED);
                     }
-                    
+
                     powerMode = getPowerMode();
                     if (powerMode < 0) {
-                      // Handle the case where supplicant driver does not support
-                      // getPowerModeCommand.
+                        // Handle the case where supplicant driver does not support
+                        // getPowerModeCommand.
                         powerMode = DRIVER_POWER_MODE_AUTO;
                     }
                     if (powerMode != DRIVER_POWER_MODE_ACTIVE) {

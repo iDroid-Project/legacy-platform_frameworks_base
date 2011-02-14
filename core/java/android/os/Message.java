@@ -85,9 +85,9 @@ public final class Message implements Parcelable {
     // sometimes we store linked lists of these things
     /*package*/ Message next;
 
-    private static final Object sPoolSync = new Object();
-    private static Message sPool;
-    private static int sPoolSize = 0;
+    private static Object mPoolSync = new Object();
+    private static Message mPool;
+    private static int mPoolSize = 0;
 
     private static final int MAX_POOL_SIZE = 10;
     
@@ -96,12 +96,11 @@ public final class Message implements Parcelable {
      * avoid allocating new objects in many cases.
      */
     public static Message obtain() {
-        synchronized (sPoolSync) {
-            if (sPool != null) {
-                Message m = sPool;
-                sPool = m.next;
+        synchronized (mPoolSync) {
+            if (mPool != null) {
+                Message m = mPool;
+                mPool = m.next;
                 m.next = null;
-                sPoolSize--;
                 return m;
             }
         }
@@ -238,12 +237,12 @@ public final class Message implements Parcelable {
      * freed.
      */
     public void recycle() {
-        synchronized (sPoolSync) {
-            if (sPoolSize < MAX_POOL_SIZE) {
+        synchronized (mPoolSync) {
+            if (mPoolSize < MAX_POOL_SIZE) {
                 clearForRecycle();
-                next = sPool;
-                sPool = this;
-                sPoolSize++;
+                
+                next = mPool;
+                mPool = this;
             }
         }
     }
@@ -454,3 +453,4 @@ public final class Message implements Parcelable {
         replyTo = Messenger.readMessengerOrNullFromParcel(source);
     }
 }
+

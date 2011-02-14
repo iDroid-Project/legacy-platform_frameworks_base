@@ -1221,7 +1221,7 @@ public class Canvas {
             checkRange(texs.length, texOffset, vertexCount);
         }
         if (colors != null) {
-            checkRange(colors.length, colorOffset, vertexCount / 2);
+            checkRange(colors.length, colorOffset, vertexCount);
         }
         if (indices != null) {
             checkRange(indices.length, indexOffset, indexCount);

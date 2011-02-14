@@ -96,8 +96,7 @@ public class SamplingProfilerIntegration {
             pending = true;
             snapshotWriter.execute(new Runnable() {
                 public void run() {
-                    String dir =
-                        Environment.getExternalStorageDirectory().getPath() + "/snapshots";
+                    String dir = "/sdcard/snapshots";
                     if (!dirMade) {
                         new File(dir).mkdirs();
                         if (new File(dir).isDirectory()) {

@@ -96,7 +96,7 @@ static bool MakeURL(const char *baseURL, const char *url, AString *out) {
         out->setTo(baseURL);
         out->append(url);
     } else {
-        const char *slashPos = strrchr(baseURL, '/');
+        char *slashPos = strrchr(baseURL, '/');
 
         if (slashPos > &baseURL[6]) {
             out->setTo(baseURL, slashPos - baseURL);

@@ -806,7 +806,7 @@ SwitchInputMapper::~SwitchInputMapper() {
 }
 
 uint32_t SwitchInputMapper::getSources() {
-    return AINPUT_SOURCE_SWITCH;
+    return 0;
 }
 
 void SwitchInputMapper::process(const RawEvent* rawEvent) {

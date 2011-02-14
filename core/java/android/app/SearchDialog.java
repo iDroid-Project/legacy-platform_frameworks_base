@@ -1109,9 +1109,6 @@ public class SearchDialog extends Dialog implements OnItemClickListener, OnItemS
      * @return true if a successful launch, false if could not (e.g. bad position).
      */
     protected boolean launchSuggestion(int position, int actionKey, String actionMsg) {
-        if (mSuggestionsAdapter == null) {
-            return false;
-        }
         Cursor c = mSuggestionsAdapter.getCursor();
         if ((c != null) && c.moveToPosition(position)) {
 
@@ -1136,7 +1133,7 @@ public class SearchDialog extends Dialog implements OnItemClickListener, OnItemS
         try {
             // If the intent was created from a suggestion, it will always have an explicit
             // component here.
-            Log.i(LOG_TAG, "Starting (as ourselves) " + intent.toUri(0));
+            Log.i(LOG_TAG, "Starting (as ourselves) " + intent.toURI());
             getContext().startActivity(intent);
             // If the search switches to a different activity,
             // SearchDialogWrapper#performActivityResuming

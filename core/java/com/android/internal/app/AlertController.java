@@ -434,7 +434,6 @@ public class AlertController {
                 View titleTemplate = mWindow.findViewById(R.id.title_template);
                 titleTemplate.setVisibility(View.GONE);
                 mIconView.setVisibility(View.GONE);
-                topPanel.setVisibility(View.GONE);
                 hasTitle = false;
             }
         }

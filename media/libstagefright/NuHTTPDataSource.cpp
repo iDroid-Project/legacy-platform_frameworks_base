@@ -42,7 +42,7 @@ static bool ParseURL(
         path->setTo(slashPos);
     }
 
-    const char *colonPos = strchr(host->string(), ':');
+    char *colonPos = strchr(host->string(), ':');
 
     if (colonPos != NULL) {
         unsigned long x;

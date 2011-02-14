@@ -73,10 +73,10 @@ public abstract class BaseCommands implements CommandsInterface {
     protected Registrant mSmsOnSimRegistrant;
     protected Registrant mSmsStatusRegistrant;
     protected Registrant mSsnRegistrant;
-    protected Registrant mCatSessionEndRegistrant;
-    protected Registrant mCatProCmdRegistrant;
-    protected Registrant mCatEventRegistrant;
-    protected Registrant mCatCallSetUpRegistrant;
+    protected Registrant mStkSessionEndRegistrant;
+    protected Registrant mStkProCmdRegistrant;
+    protected Registrant mStkEventRegistrant;
+    protected Registrant mStkCallSetUpRegistrant;
     protected Registrant mIccSmsFullRegistrant;
     protected Registrant mEmergencyCallbackModeRegistrant;
     protected Registrant mIccRefreshRegistrant;
@@ -395,36 +395,36 @@ public abstract class BaseCommands implements CommandsInterface {
         mSsnRegistrant.clear();
     }
 
-    public void setOnCatSessionEnd(Handler h, int what, Object obj) {
-        mCatSessionEndRegistrant = new Registrant (h, what, obj);
+    public void setOnStkSessionEnd(Handler h, int what, Object obj) {
+        mStkSessionEndRegistrant = new Registrant (h, what, obj);
     }
 
-    public void unSetOnCatSessionEnd(Handler h) {
-        mCatSessionEndRegistrant.clear();
+    public void unSetOnStkSessionEnd(Handler h) {
+        mStkSessionEndRegistrant.clear();
     }
 
-    public void setOnCatProactiveCmd(Handler h, int what, Object obj) {
-        mCatProCmdRegistrant = new Registrant (h, what, obj);
+    public void setOnStkProactiveCmd(Handler h, int what, Object obj) {
+        mStkProCmdRegistrant = new Registrant (h, what, obj);
     }
 
-    public void unSetOnCatProactiveCmd(Handler h) {
-        mCatProCmdRegistrant.clear();
+    public void unSetOnStkProactiveCmd(Handler h) {
+        mStkProCmdRegistrant.clear();
     }
 
-    public void setOnCatEvent(Handler h, int what, Object obj) {
-        mCatEventRegistrant = new Registrant (h, what, obj);
+    public void setOnStkEvent(Handler h, int what, Object obj) {
+        mStkEventRegistrant = new Registrant (h, what, obj);
     }
 
-    public void unSetOnCatEvent(Handler h) {
-        mCatEventRegistrant.clear();
+    public void unSetOnStkEvent(Handler h) {
+        mStkEventRegistrant.clear();
     }
 
-    public void setOnCatCallSetUp(Handler h, int what, Object obj) {
-        mCatCallSetUpRegistrant = new Registrant (h, what, obj);
+    public void setOnStkCallSetUp(Handler h, int what, Object obj) {
+        mStkCallSetUpRegistrant = new Registrant (h, what, obj);
     }
 
-    public void unSetOnCatCallSetUp(Handler h) {
-        mCatCallSetUpRegistrant.clear();
+    public void unSetOnStkCallSetUp(Handler h) {
+        mStkCallSetUpRegistrant.clear();
     }
 
     public void setOnIccSmsFull(Handler h, int what, Object obj) {

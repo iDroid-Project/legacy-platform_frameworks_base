@@ -11,7 +11,6 @@ LOCAL_SRC_FILES:=                         \
         AwesomePlayer.cpp                 \
         CameraSource.cpp                  \
         DataSource.cpp                    \
-        DRMExtractor.cpp                  \
         ESDS.cpp                          \
         FileSource.cpp                    \
         HTTPStream.cpp                    \
@@ -60,8 +59,7 @@ LOCAL_SHARED_LIBRARIES := \
         libsonivox        \
         libvorbisidec     \
         libsurfaceflinger_client \
-        libcamera_client \
-        libdrmframework
+        libcamera_client
 
 LOCAL_STATIC_LIBRARIES := \
         libstagefright_aacdec \

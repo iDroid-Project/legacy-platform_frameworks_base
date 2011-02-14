@@ -88,14 +88,7 @@ public interface InputFilter
             } else if (keep >= end - start) {
                 return null; // keep original
             } else {
-                keep += start;
-                if (Character.isHighSurrogate(source.charAt(keep - 1))) {
-                    --keep;
-                    if (keep == start) {
-                        return "";
-                    }
-                }
-                return source.subSequence(start, keep);
+                return source.subSequence(start, start + keep);
             }
         }
 

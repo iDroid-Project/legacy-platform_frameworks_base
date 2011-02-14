@@ -397,13 +397,11 @@ public final class ServerOperation implements Operation, BaseStream {
                     && (headerID != ObexHelper.OBEX_OPCODE_GET_FINAL)) {
 
                 if (length > 3) {
-                    byte[] temp = new byte[length - 3];
-                    // First three bytes already read, compensating for this
+                    byte[] temp = new byte[length];
                     bytesReceived = mInput.read(temp);
 
-                    while (bytesReceived != temp.length) {
-                        bytesReceived += mInput.read(temp, bytesReceived,
-                                temp.length - bytesReceived);
+                    while (bytesReceived != length) {
+                        bytesReceived += mInput.read(temp, bytesReceived, length - bytesReceived);
                     }
                 }
 

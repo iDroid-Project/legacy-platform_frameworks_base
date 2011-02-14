@@ -374,48 +374,48 @@ public interface CommandsInterface {
     void unSetOnSuppServiceNotification(Handler h);
 
     /**
-     * Sets the handler for Session End Notifications for CAT.
+     * Sets the handler for Session End Notifications for STK.
      * Unlike the register* methods, there's only one notification handler
      *
      * @param h Handler for notification message.
      * @param what User-defined message code.
      * @param obj User object.
      */
-    void setOnCatSessionEnd(Handler h, int what, Object obj);
-    void unSetOnCatSessionEnd(Handler h);
+    void setOnStkSessionEnd(Handler h, int what, Object obj);
+    void unSetOnStkSessionEnd(Handler h);
 
     /**
-     * Sets the handler for Proactive Commands for CAT.
+     * Sets the handler for Proactive Commands for STK.
      * Unlike the register* methods, there's only one notification handler
      *
      * @param h Handler for notification message.
      * @param what User-defined message code.
      * @param obj User object.
      */
-    void setOnCatProactiveCmd(Handler h, int what, Object obj);
-    void unSetOnCatProactiveCmd(Handler h);
+    void setOnStkProactiveCmd(Handler h, int what, Object obj);
+    void unSetOnStkProactiveCmd(Handler h);
 
     /**
-     * Sets the handler for Event Notifications for CAT.
+     * Sets the handler for Event Notifications for STK.
      * Unlike the register* methods, there's only one notification handler
      *
      * @param h Handler for notification message.
      * @param what User-defined message code.
      * @param obj User object.
      */
-    void setOnCatEvent(Handler h, int what, Object obj);
-    void unSetOnCatEvent(Handler h);
+    void setOnStkEvent(Handler h, int what, Object obj);
+    void unSetOnStkEvent(Handler h);
 
     /**
-     * Sets the handler for Call Set Up Notifications for CAT.
+     * Sets the handler for Call Set Up Notifications for STK.
      * Unlike the register* methods, there's only one notification handler
      *
      * @param h Handler for notification message.
      * @param what User-defined message code.
      * @param obj User object.
      */
-    void setOnCatCallSetUp(Handler h, int what, Object obj);
-    void unSetOnCatCallSetUp(Handler h);
+    void setOnStkCallSetUp(Handler h, int what, Object obj);
+    void unSetOnStkCallSetUp(Handler h);
 
     /**
      * Enables/disbables supplementary service related notifications from

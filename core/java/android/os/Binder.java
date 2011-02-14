@@ -324,10 +324,6 @@ public class Binder implements IBinder {
         } catch (RuntimeException e) {
             reply.writeException(e);
             res = true;
-        } catch (OutOfMemoryError e) {
-            RuntimeException re = new RuntimeException("Out of memory", e);
-            reply.writeException(re);
-            res = true;
         }
         reply.recycle();
         data.recycle();

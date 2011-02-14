@@ -49,7 +49,6 @@ import static com.android.internal.telephony.CommandsInterface.CF_REASON_UNCONDI
 import static com.android.internal.telephony.CommandsInterface.SERVICE_CLASS_VOICE;
 import static com.android.internal.telephony.TelephonyProperties.PROPERTY_BASEBAND_VERSION;
 
-import com.android.internal.telephony.cat.CatService;
 import com.android.internal.telephony.Call;
 import com.android.internal.telephony.CallForwardInfo;
 import com.android.internal.telephony.CallStateException;
@@ -69,6 +68,7 @@ import com.android.internal.telephony.PhoneProxy;
 import com.android.internal.telephony.PhoneSubInfo;
 import com.android.internal.telephony.TelephonyProperties;
 import com.android.internal.telephony.UUSInfo;
+import com.android.internal.telephony.gsm.stk.StkService;
 import com.android.internal.telephony.test.SimulatedRadioControl;
 import com.android.internal.telephony.IccVmNotSupportedException;
 
@@ -102,7 +102,7 @@ public class GSMPhone extends PhoneBase {
     GsmSMSDispatcher mSMS;
     SIMRecords mSIMRecords;
     SimCard mSimCard;
-    CatService mStkService;
+    StkService mStkService;
     ArrayList <GsmMmiCode> mPendingMMIs = new ArrayList<GsmMmiCode>();
     SimPhoneBookInterfaceManager mSimPhoneBookIntManager;
     SimSmsInterfaceManager mSimSmsIntManager;
@@ -150,7 +150,7 @@ public class GSMPhone extends PhoneBase {
             mSimSmsIntManager = new SimSmsInterfaceManager(this, mSMS);
             mSubInfo = new PhoneSubInfo(this);
         }
-        mStkService = CatService.getInstance(mCM, mSIMRecords, mContext,
+        mStkService = StkService.getInstance(mCM, mSIMRecords, mContext,
                 (SIMFileHandler)mIccFileHandler, mSimCard);
 
         mCM.registerForAvailable(this, EVENT_RADIO_AVAILABLE, null);
@@ -968,9 +968,7 @@ public class GSMPhone extends PhoneBase {
     }
 
     public void getCallWaiting(Message onComplete) {
-        //As per 3GPP TS 24.083, section 1.6 UE doesn't need to send service
-        //class parameter in call waiting interrogation  to network
-        mCM.queryCallWaiting(CommandsInterface.SERVICE_CLASS_NONE, onComplete);
+        mCM.queryCallWaiting(CommandsInterface.SERVICE_CLASS_VOICE, onComplete);
     }
 
     public void setCallWaiting(boolean enable, Message onComplete) {
@@ -1223,8 +1221,7 @@ public class GSMPhone extends PhoneBase {
                 // Check if this is a different SIM than the previous one. If so unset the
                 // voice mail number.
                 String imsi = getVmSimImsi();
-                String imsiFromSIM = getSubscriberId();
-                if (imsi != null && imsiFromSIM != null && !imsiFromSIM.equals(imsi)) {
+                if (imsi != null && !getSubscriberId().equals(imsi)) {
                     storeVoiceMailNumber(null);
                     setVmSimImsi(null);
                 }
@@ -1483,7 +1480,4 @@ public class GSMPhone extends PhoneBase {
         Log.e(LOG_TAG, "Error! This functionality is not implemented for GSM.");
     }
 
-    public boolean isCspPlmnEnabled() {
-        return mSIMRecords.isCspPlmnEnabled();
-    }
 }

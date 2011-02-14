@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package android.telephony;
+package com.android.internal.telephony;
 
 import android.telephony.PhoneNumberFormattingTextWatcher;
 import android.test.suitebuilder.annotation.SmallTest;

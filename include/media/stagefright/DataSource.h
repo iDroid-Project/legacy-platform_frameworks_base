@@ -25,7 +25,6 @@
 #include <utils/List.h>
 #include <utils/RefBase.h>
 #include <utils/threads.h>
-#include <drm/DrmManagerClient.h>
 
 namespace android {
 
@@ -73,13 +72,6 @@ public:
 
     static void RegisterSniffer(SnifferFunc func);
     static void RegisterDefaultSniffers();
-
-    // for DRM
-    virtual DecryptHandle* DrmInitialization(DrmManagerClient *client) {
-        return NULL;
-    }
-    virtual void getDrmInfo(DecryptHandle **handle, DrmManagerClient **client) {};
-
 
 protected:
     virtual ~DataSource() {}
