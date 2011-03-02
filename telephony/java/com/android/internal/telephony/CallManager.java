@@ -380,17 +380,12 @@ public final class CallManager {
                 break;
             case OFFHOOK:
                 Phone fgPhone = getFgPhone();
-                // While foreground call is in DIALING,
-                // ALERTING, ACTIVE and DISCONNECTING state
+                // Enable IN_CALL mode while foreground call is in DIALING,
+                // ALERTING, ACTIVE and DISCONNECTING state and not from sipPhone
                 if (getActiveFgCallState() != Call.State.IDLE
-                        && getActiveFgCallState() != Call.State.DISCONNECTED) {
-                    if (fgPhone instanceof SipPhone) {
-                        // enable IN_COMMUNICATION audio mode for sipPhone
-                        mode = AudioManager.MODE_IN_COMMUNICATION;
-                    } else {
-                        // enable IN_CALL audio mode for telephony
-                        mode = AudioManager.MODE_IN_CALL;
-                    }
+                        && getActiveFgCallState() != Call.State.DISCONNECTED
+                        && !(fgPhone instanceof SipPhone)) {
+                    mode = AudioManager.MODE_IN_CALL;
                 }
                 break;
         }
